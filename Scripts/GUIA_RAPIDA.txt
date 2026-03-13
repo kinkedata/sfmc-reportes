@@ -1,0 +1,214 @@
+# 🎯 GUÍA RÁPIDA - SISTEMA DE REPORTES TELCEL
+
+## 📦 ¿Qué incluye este paquete?
+
+```
+Scripts/
+├── config.json                           (Configuración: regiones, ejecutivos, rutas)
+├── generar_reportes.py                   (Script principal - CORE v1.4 FINAL)
+├── instalar_scheduler_windows.bat        (Automatización Windows)
+├── instalar_scheduler_linux.sh           (Automatización Linux/Mac)
+├── README.md                             (Documentación completa)
+├── GUIA_RAPIDA.txt                       (Este archivo)
+└── ejemplo_leads_diarios.csv             (Para probar sin SFMC)
+```
+
+---
+
+## ⚡ 3 Pasos para Empezar
+
+### PASO 1: Instalar dependencias (2 minutos)
+```
+pip install openpyxl msoffcrypto-tool
+```
+Nota: `msoffcrypto-tool` permite encriptar los Excel con contraseña real.
+
+### PASO 2: Descargar CSV de SFMC (1 minuto diario)
+```
+SFMC → Contacts → Data Extensions → de-sol-forms → Download CSV
+↓
+Guardar en: C:\Reportes\Telcel\leads_diarios.csv
+```
+
+### PASO 3: Ejecutar script
+```
+python generar_reportes.py
+```
+
+**¡Listo!** Se generarán 11 Excel + instrucciones para envío.
+
+---
+
+## 🔄 Automatización (Opcional pero RECOMENDADO)
+
+### Windows:
+```
+1. Click derecho en: instalar_scheduler_windows.bat
+2. "Ejecutar como administrador"
+3. Done. Se ejecutará a las 9 AM todos los días
+```
+
+### Linux/Mac:
+```
+chmod +x instalar_scheduler_linux.sh
+sudo ./instalar_scheduler_linux.sh
+```
+
+---
+
+## 📧 Workflow Diario
+
+```
+HORA 9:00 AM
+├─ Script se ejecuta automáticamente
+├─ Lee CSV de SFMC (leads del día anterior)
+├─ Genera Excel encriptados por región (solo regiones con leads)
+└─ Crea CONTRASEÑAS_DDMMYYYY.txt
+        ↓
+TÚ INTERVENCIÓN (Manual, toma ~10 minutos)
+├─ Abres CONTRASEÑAS_DDMMYYYY.txt (para ver contraseñas del día)
+├─ Consultas config.json para ver destinatarios por región
+├─ Abres Gmail → Nuevo correo por región
+├─ Escribes TO, CC, asunto, cuerpo con la contraseña
+├─ Adjuntas el Excel de esa región
+└─ Envías (repites por cada región con leads)
+```
+
+---
+
+## 🔐 Contraseñas Aleatorias
+
+```
+Cada región recibe contraseña ALEATORIA en cada ejecución:
+
+Formato: {REGION}TEL{3 caracteres aleatorios de A-Z y 0-9}
+
+Ejemplo de una ejecución:
+R1  →  R1TELABC
+R2  →  R2TELX4F
+R3  →  R3TEL9ZK
+MOM →  MOMTELQ7R
+BUI →  BUITELW2P
+
+Las contraseñas del día se guardan en: CONTRASEÑAS_DDMMYYYY.txt
+```
+
+Los Excel se encriptan realmente (con msoffcrypto-tool). Al abrirlos,
+Excel pide la contraseña antes de mostrar los datos.
+
+---
+
+## 📊 Distribución Automática
+
+El script **automáticamente**:
+
+✅ Separa leads por región (R1-R9)
+✅ Identifica Mobile Marketing (MOM)
+✅ Identifica Business Intelligence (BUI)
+✅ Solo genera archivos para regiones que tengan leads ese día
+✅ Genera Excel profesionales con formato (headers azules, bordes)
+✅ Encripta cada Excel con contraseña aleatoria única por región
+✅ Guarda todas las contraseñas en CONTRASEÑAS_DDMMYYYY.txt
+
+---
+
+## 🧪 Probar SIN SFMC
+
+Si quieres probar sin acceso a SFMC:
+
+1. Edita `ejemplo_leads_diarios.csv`: cambia los CreatedAt al día de AYER
+2. Coloca el archivo en la ruta configurada en `config.json` (campo `csv_entrada`)
+3. Ejecuta: `python generar_reportes.py`
+4. Verifica que los Excel se generan con `🔒 PROTEGIDO` (o `✅ CREADO` si no tienes msoffcrypto-tool)
+
+---
+
+## 🛠️ Personalizar
+
+Edita `config.json` para:
+- Cambiar hora de ejecución
+- Agregar/modificar ejecutivos
+- Cambiar rutas de carpetas
+- Agregar columnas al reporte
+
+Luego reinicia la tarea programada.
+
+---
+
+## ❓ Preguntas Frecuentes
+
+**P: ¿Los Excel están encriptados?**
+R: SÍ, con contraseña real usando msoffcrypto-tool.
+Al abrir el Excel, Excel pide la contraseña antes de mostrar datos.
+Si msoffcrypto-tool no está instalado, se genera sin encriptar.
+Instalar: `pip install msoffcrypto-tool`
+
+**P: ¿Cómo son las contraseñas?**
+R: Aleatorias por región. Formato: `{REGION}TEL{3 chars}` ej. `R1TELABC`
+Se guardan en `CONTRASEÑAS_DDMMYYYY.txt` en la carpeta de salida.
+
+**P: ¿Cómo se llaman los archivos Excel generados?**
+R: Regiones R1-R9: `R1-leads-calificados-x-dia-r1-YYYY-MM-DD.xlsx`
+Mobile Marketing: `MM-tel-leads-mobile-marketing-YYYY-MM-DD.xlsx`
+Business Intel: `BI-tel-leads-business-intellig-YYYY-MM-DD.xlsx`
+
+**P: ¿Qué pasa si no hay leads del día anterior?**
+R: El script muestra: "⚠️  No hay leads para el día anterior" y termina.
+
+**P: ¿Dónde se guardan los archivos generados?**
+R: En la ruta `carpeta_salida` de config.json.
+
+**P: ¿Puedo cambiar la hora de ejecución?**
+R: Sí, en `config.json` edita: `"hora_ejecucion": "10:00"`
+
+**P: ¿A quién envío cada región?**
+R: Consulta config.json → sección "regiones" → ejecutivos de cada región.
+
+---
+
+## 📞 Troubleshooting
+
+**❌ "No encontrado: leads_diarios.csv"**
+→ Verifica la ruta `csv_entrada` en config.json
+→ Asegúrate que el CSV esté exactamente en esa ruta
+
+**❌ "FileNotFoundError: config.json"**
+→ config.json debe estar en el MISMO directorio que generar_reportes.py
+
+**❌ La tarea programada no se ejecuta**
+→ Abre Task Scheduler, verifica que esté ENABLED
+→ Ejecuta manualmente para ver errores: `python generar_reportes.py`
+
+**❌ Los Excel vacíos/sin datos**
+→ El CSV debe tener leads del DÍA ANTERIOR (no de hoy)
+→ Verifica el campo CreatedAt - soporta múltiples formatos de fecha
+
+**❌ Los Excel no están encriptados (muestra ✅ CREADO en lugar de 🔒 PROTEGIDO)**
+→ Instala msoffcrypto-tool: `pip install msoffcrypto-tool`
+→ Verifica que msoffcrypto-tool esté en el PATH del sistema
+
+---
+
+## 📋 Requisitos
+
+✓ Python 3.8+
+✓ openpyxl (para generar Excel) — obligatorio
+✓ msoffcrypto-tool (para encriptar Excel) — recomendado
+✓ CSV de SFMC actualizado diariamente
+✓ Windows/Linux/Mac
+
+---
+
+## 🎯 Siguiente Paso
+
+Después de la ejecución manual, puedes:
+
+1. **Opcional:** Integrar con SMTP para envío automático de emails
+2. **Opcional:** Generar PDF de resumen
+3. **Opcional:** Webhook a Slack para notificaciones
+
+---
+
+**Creado:** 12-03-2026
+**Versión:** 1.4 FINAL
+**Estado:** Listo para producción

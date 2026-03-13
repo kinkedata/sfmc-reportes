@@ -1,0 +1,327 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                      FLUJO COMPLETO DEL SISTEMA                               ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+                            DIARIAMENTE A LAS 9 AM
+                                     │
+                                     ▼
+                    ┌─────────────────────────────────┐
+                    │  generar_reportes.py              │
+                    │  (Script Principal)               │
+                    └─────────────────────────────────┘
+                                     │
+                ┌────────────────────┼────────────────────┐
+                │                    │                    │
+                ▼                    ▼                    ▼
+        ┌─────────────┐      ┌─────────────┐      ┌──────────────┐
+        │ config.json │      │ CSV de SFMC │      │  Scheduler   │
+        │ (Setup)     │      │ (Datos)     │      │  (Windows/   │
+        └─────────────┘      └─────────────┘      │   Linux)     │
+                │                    │              └──────────────┘
+                └────────────────────┼──────────────────────┘
+                                     │
+                    ┌────────────────▼────────────────┐
+                    │   PROCESAMIENTO                  │
+                    ├────────────────────────────────┤
+                    │ 1. Leer CSV                     │
+                    │ 2. Filtrar por fecha (ayer)     │
+                    │ 3. Clasificar por región/sol.   │
+                    │ 4. Generar Excel formateados    │
+                    │ 5. Crear contraseñas aleatorias │
+                    │ 6. Encriptar Excel (msoffcrypto)│
+                    └────────────────┬────────────────┘
+                                     │
+            ┌────────────────────────┼────────────────────────┐
+            │                        │                        │
+            ▼                        ▼                        ▼
+    ┌──────────────────────────┐    ┌──────────────────────────┐
+    │  Excel Encriptados       │    │ CONTRASEÑAS_*.txt        │
+    │  (hasta 11 archivos)     │    │ (Contraseñas del día)    │
+    │                          │    │                          │
+    │ ├─ R1-leads-...-         │    │ R1  :  R1TELABC          │
+    │ │   2026-03-12.xlsx 🔒   │    │ R2  :  R2TELX4F          │
+    │ ├─ R2-leads-...xlsx 🔒   │    │ R3  :  R3TEL9ZK          │
+    │ ├─ R3-leads-...xlsx 🔒   │    │ ...                      │
+    │ ├─ ...                   │    │ MOM :  MOMTELQ7R         │
+    │ ├─ MM-tel-..xlsx 🔒      │    │ BUI :  BUITELW2P         │
+    │ └─ BI-tel-..xlsx 🔒      │    │                          │
+    └──────────────────────────┘    └──────────────────────────┘
+            │                                  │
+            └──────────────────────────────────┘
+                                     │
+                    ┌────────────────▼────────────────┐
+                    │  Carpeta: Excel_Generados/       │
+                    │  ├─ R1-leads-calificados-x-dia-  │
+                    │  │   r1-2026-03-12.xlsx 🔒       │
+                    │  ├─ R2-leads-calificados-...xlsx │
+                    │  ├─ ... (hasta 9 regiones)       │
+                    │  ├─ MM-tel-leads-mobile-         │
+                    │  │   marketing-2026-03-12.xlsx   │
+                    │  ├─ BI-tel-leads-business-       │
+                    │  │   intellig-2026-03-12.xlsx    │
+                    │  └─ CONTRASEÑAS_12032026.txt     │
+                    └────────────────┬────────────────┘
+                                     │
+                         [Aquí entra TÚ - Manual]
+                                     │
+                    ┌────────────────▼────────────────┐
+                    │  Abres: CONTRASEÑAS_*.txt       │
+                    │  Ves la contraseña de cada reg. │
+                    │  Abres Gmail                    │
+                    │  Adjuntas Excel + contraseña    │
+                    │  Envías (repites por región)    │
+                    └────────────────┬────────────────┘
+                                     │
+                                     ▼
+                    ┌────────────────────────────────┐
+                    │  ✅ EMAILS ENVIADOS             │
+                    │  A LAS REGIONES CON LEADS      │
+                    │  EXCEL PROTEGIDO CON CONTRASEÑA│
+                    └────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ESTRUCTURA DE ARCHIVOS EN TU COMPUTADORA:
+
+C:\Reportes\Telcel\
+│
+├── leads_diarios.csv              ← Exportas AQUÍ desde SFMC (diario)
+│
+└── Scripts\
+    ├── generar_reportes.py        ← Script principal
+    ├── config.json                ← Configuración (editar una sola vez)
+    ├── instalar_scheduler_*       ← Instaladores (ejecutar una sola vez)
+    │
+    └── Excel_Generados\           ← Se crea automáticamente
+        ├── R1-leads-calificados-x-dia-r1-2026-03-12.xlsx 🔒
+        ├── R2-leads-calificados-x-dia-r2-2026-03-12.xlsx 🔒
+        ├── ... (hasta R9)
+        ├── MM-tel-leads-mobile-marketing-2026-03-12.xlsx 🔒
+        ├── BI-tel-leads-business-intellig-2026-03-12.xlsx 🔒
+        └── CONTRASEÑAS_12032026.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLASIFICACIÓN AUTOMÁTICA DE LEADS:
+
+        CSV de SFMC (52 registros)
+                │
+                ▼
+        [Filtrar por CreatedAt = Ayer]
+                │
+                ▼
+        35 leads válidos del 12-03-2025
+                │
+        ┌───────┴────────┬─────────────┬──────────────┐
+        │                │             │              │
+        ▼                ▼             ▼              ▼
+    Región R1-R9    Mobile Marketing  Business        (Otros)
+    ├─ R1: 8          Intelligence    ├─ MOM: 5
+    ├─ R2: 6          ├─ MOM: 5       └─ BUI: 4
+    ├─ R3: 7          └─ [Detecta
+    ├─ ...            automáticamente
+    ├─ R9: 3          si contiene
+    │                 "Mobile..." o
+    │                 "Business...]
+    │
+    Basado en:        Basado en:      Basado en:
+    • Campo Region    • Campo          • Campo
+    • No. Empleados   SolucionInteres  SolucionInteres
+    → Asigna exec.    → Contacto       → Contacto
+    Jr/Sr             especial         especial
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTRASEÑA ALEATORIA - CÓMO FUNCIONA:
+
+Patrón: {REGION}TEL{3 caracteres aleatorios de A-Z y 0-9}
+
+Ejemplo de una ejecución:
+┌─────────────┬──────────────────────────────────────────┐
+│   Región    │  Contraseña generada                     │
+├─────────────┼──────────────────────────────────────────┤
+│ R1          │ R1TELABC                                 │
+│ R2          │ R2TELX4F                                 │
+│ R3          │ R3TEL9ZK                                 │
+│ ...         │ ...                                      │
+│ MOM         │ MOMTELQ7R                                │
+│ BUI         │ BUITELW2P                                │
+└─────────────┴──────────────────────────────────────────┘
+
+Nota: Los 3 caracteres finales cambian CADA VEZ que se ejecuta el script.
+Son completamente aleatorios (no predecibles).
+
+✅ Cada región tiene contraseña DIFERENTE
+✅ Cambia en cada ejecución AUTOMÁTICAMENTE
+✅ No necesitas actualizarla manualmente
+✅ El archivo CONTRASEÑAS_*.txt tiene las del día
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DISTRIBUCIÓN DE LEADS (Automático según campo Region/SolucionInteres):
+
+        LEADS CON SolucionInteres = "Mobile Marketing"
+        └─ → Clasificados en archivo MOM
+
+        LEADS CON SolucionInteres = "Business Intelligence"
+        └─ → Clasificados en archivo BUI
+
+        LEADS SIN Mobile Marketing / Business Intelligence
+        └─ → Clasificados por campo Region (R1, R2, ..., R9)
+
+        LEADS SIN región válida → Ignorados
+
+El config.json tiene los contactos de ejecutivos por región para que
+puedas consultar a quién enviar cada archivo. El script los lee al inicio.
+
+TODO AUTOMÁTICO - Solo edita config.json una vez si hay cambios en ejecutivos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXCEL GENERADO - QUÉ VE EL EJECUTIVO (tras ingresar contraseña):
+
+╔════════════════════════════════════════════════════════════════════════╗
+║          R1-leads-calificados-x-dia-r1-2026-03-12.xlsx       Leads   ║
+╠════════════════════════════════════════════════════════════════════════╣
+║                                                                        ║
+║ Correo    │ Nombre │ Apellido │ Teléfono │ Estado │ Municipio │ ... ║
+║ ─────────────────────────────────────────────────────────────────     ║
+║ juan@...  │ Juan   │ Pérez    │ 5555...  │ JAL    │ Guadal... │ ... ║
+║ maria@... │ María  │ García   │ 5555...  │ JAL    │ Zapopan   │ ... ║
+║ carlos@...│ Carlos │ López    │ 5555...  │ EDOMX  │ Toluca    │ ... ║
+║ ...       │ ...    │ ...      │ ...      │ ...    │ ...       │ ... ║
+║                                                                        ║
+║ [Columnas: Correo, Nombre, Apellido, Telefono, Estado, Municipio,   ║
+║            RazonSocial, Cargo, OtroCargo, NoEmpleados,               ║
+║            SolucionInteres, ServicioInteres, Mensaje, CreatedAt,     ║
+║            Region, CorreoComercial]                                   ║
+║                                                                        ║
+║ ─── INFO ───────────────────────────────────────────────────────     ║
+║ Reporte generado: 12-03-2026 09:00:15                                ║
+║ Período: 11-03-2026                                                  ║
+║ Total de registros: 8                                                ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
+
+✅ Formato profesional
+✅ Headers azules con texto blanco (color #00529B)
+✅ Bordes en todas las celdas
+✅ Columnas ajustadas automáticamente
+✅ Información de generación al pie
+✅ Archivo encriptado con contraseña (requiere msoffcrypto-tool)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EMAIL - QUÉ ENVÍAS MANUALMENTE:
+
+╔════════════════════════════════════════════════════════════════════════╗
+║ TO:  ignacio.sanchez@telcel.com, melpadsa@telcel.com                  ║
+║ CC:  gisela.sosa@demo.reseller.telcel.com,                           ║
+║      enrique.ramirez@courtavenue.com                                  ║
+║ ─────────────────────────────────────────────────────────────────     ║
+║ SUBJECT: Reporte de leads R1 - 12 de Marzo 2026                      ║
+║ ─────────────────────────────────────────────────────────────────     ║
+║                                                                        ║
+║ Buenos días equipo.                                                   ║
+║ Comparto el reporte de leads de R1 correspondiente al período del    ║
+║ 11-03-2026.                                                          ║
+║ Contraseña del archivo: R1TELABC                                     ║
+║ (Ver todas las contraseñas en CONTRASEÑAS_12032026.txt)              ║
+║ Quedo pendiente.                                                      ║
+║ Saludos.                                                              ║
+║                                                                        ║
+║ [ADJUNTO: R1-leads-calificados-x-dia-r1-2026-03-12.xlsx]             ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
+
+✅ Consulta CONTRASEÑAS_*.txt para obtener la contraseña de cada región
+✅ Adjunta el Excel correspondiente a cada región
+✅ El Excel pide contraseña al abrirse (protección real)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TIEMPO DE EJECUCIÓN:
+
+Operación                      Tiempo Aprox.
+─────────────────────────────────────────────
+Exportar CSV de SFMC           30 segundos
+Ejecutar script (automático)   <5 segundos
+Generar 11 Excel               <2 segundos
+Crear instrucciones            <1 segundo
+─────────────────────────────────────────────
+SUBTOTAL AUTOMÁTICO            <8 segundos
+
+Copiar-pegar instrucciones     2 minutos
+Enviar 11 emails               8 minutos
+─────────────────────────────────────────────
+SUBTOTAL MANUAL                10 minutos
+
+TOTAL DIARIO                    ~10-11 minutos
+
+AHORRO vs. HubSpot              ~20 minutos/día
+AHORRO ANUAL                    ~65 horas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONFIGURACIÓN RECOMENDADA (config.json):
+
+{
+  "rutas": {
+    "csv_entrada": "C:\\Reportes\\Telcel\\leads_diarios.csv",
+    "carpeta_salida": "C:\\Reportes\\Telcel\\Excel_Generados",
+    "carpeta_respaldo": "C:\\Reportes\\Telcel\\Respaldo",
+    "hora_ejecucion": "09:00"
+  },
+  "regiones": {
+    "R1": {
+      "nombre": "Región 1",
+      "ejecutivos": {
+        "junior": "ignacio.sanchez@telcel.com",
+        "senior": "melpadsa@telcel.com"
+      }
+    },
+    ... (R2-R9 similar)
+    "MOM": { "ejecutivos": { "contacto": "antonio.porras@telcelmkt.com" } },
+    "BUI": { "ejecutivos": { "contacto": "antonio.porras@telcelmkt.com" } }
+  },
+  "columnas_reporte": ["Correo", "Nombre", "Apellido", ...]
+}
+
+✅ YA VIENE CONFIGURADO
+✅ Solo edita si cambian los ejecutivos o rutas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INSTALACIÓN RESUMIDA:
+
+Windows:
+1. pip install openpyxl msoffcrypto-tool
+2. Click derecho → instalar_scheduler_windows.bat → "Ejecutar admin"
+3. Done ✅
+
+Linux/Mac:
+1. pip install openpyxl msoffcrypto-tool
+2. chmod +x instalar_scheduler_linux.sh
+3. sudo ./instalar_scheduler_linux.sh
+4. Done ✅
+
+Uso diario:
+1. Exporta CSV de SFMC → C:\Reportes\Telcel\leads_diarios.csv
+2. (Script se ejecuta automático a las 9 AM)
+3. Abres CONTRASEÑAS_*.txt para ver contraseñas del día
+4. Por cada región con leads: Copia destinatarios de config.json → Gmail
+5. Adjuntas Excel (protegido) + escribes contraseña en el cuerpo → Envías
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+¿PREGUNTAS?
+
+Revisa:
+• RESUMEN_SISTEMA.txt
+• GUIA_RAPIDA.txt
+• README.md (Documentación completa)
+
+El sistema está 100% listo para usar. ¡Que lo disfrutes! 🚀
+
+Creado: 13-03-2026
+Versión: 1.4 FINAL - PRODUCCIÓN

@@ -1,0 +1,395 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  INSTALACIÓN PASO-A-PASO - WINDOWS 10/11                      ║
+║                                                                                ║
+║           Sistema Automatizado de Reportes Telcel Empresas                    ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+⏱️  TIEMPO TOTAL: 15 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 1: Instalar Python (Si no lo tienes)
+
+1. Abre navegador → google.com
+2. Busca: "python download"
+3. Entra en: python.org (sitio oficial)
+4. Haz clic en: "Downloads" → "Windows"
+5. Descarga: "Python 3.12.x" (última versión)
+
+6. Abre el instalador descargado
+7. IMPORTANTE: Marca la casilla "Add Python to PATH"
+   ┌─────────────────────────────────────────┐
+   │ ☑ Add Python 3.12 to PATH              │  ← MARCA ESTO
+   └─────────────────────────────────────────┘
+8. Haz clic en "Install Now"
+9. Espera a que termine (2-3 minutos)
+10. Haz clic en "Close"
+
+✅ Verificar instalación:
+   - Presiona: Windows Key + R
+   - Escribe: cmd
+   - Escribe: python --version
+   - Debe mostrar: Python 3.12.x
+   - Si yes, LISTO ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 2: Crear Carpetas
+
+1. Abre Explorador de archivos (Windows + E)
+
+2. En tu disco C:, crea la estructura siguiente:
+
+   C:\Reportes\
+   └─ Telcel\
+      ├─ Scripts\           ← Aquí van los archivos del sistema
+      └─ Excel_Generados\  ← Aquí se guardarán los reportes
+
+3. Paso-a-paso:
+   a) Click derecho en C:\ → Nueva carpeta
+   b) Escribe: Reportes
+   c) Enter
+   
+   d) Abre la carpeta Reportes (doble clic)
+   e) Click derecho → Nueva carpeta
+   f) Escribe: Telcel
+   g) Enter
+   
+   h) Abre la carpeta Telcel
+   i) Click derecho → Nueva carpeta
+   j) Escribe: Scripts
+   k) Enter
+   
+   l) Repite para crear: Excel_Generados
+
+Resultado final:
+C:\Reportes\Telcel\
+├─ Scripts\
+├─ Excel_Generados\
+└─ leads_diarios.csv  ← Aquí descargarás el CSV de SFMC
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 3: Descargar los Archivos del Sistema
+
+1. Descargaste 8 archivos (ya tienes un ZIP o están en tu PC)
+
+2. Copia estos 8 archivos a C:\Reportes\Telcel\Scripts\:
+   
+   ✓ generar_reportes.py
+   ✓ config.json
+   ✓ instalar_scheduler_windows.bat
+   ✓ instalar_scheduler_linux.sh
+   ✓ README.md
+   ✓ GUIA_RAPIDA.txt
+   ✓ ejemplo_leads_diarios.csv
+   ✓ (Otros archivos de documentación)
+
+3. Copia también ejemplo_leads_diarios.csv a C:\Reportes\Telcel\
+
+Resultado:
+C:\Reportes\
+└─ Telcel\
+   ├─ ejemplo_leads_diarios.csv  ← Para probar
+   └─ Scripts\
+      ├─ generar_reportes.py
+      ├─ config.json
+      ├─ instalar_scheduler_windows.bat
+      ├─ (... otros archivos)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 4: Instalar las Librerías Python Necesarias
+
+1. Presiona: Windows Key + R
+2. Escribe: cmd
+3. Presiona: Enter (se abre ventana negra - CMD)
+
+4. Copia y pega este comando:
+
+   pip install openpyxl msoffcrypto-tool
+
+5. Presiona: Enter
+6. Espera a que termine (puede tardar 1-2 minutos)
+
+Output esperado:
+   Successfully installed openpyxl-3.x.x msoffcrypto-tool-x.x.x
+
+Nota: msoffcrypto-tool es el que permite encriptar los Excel con contraseña real.
+Si no se instala, los Excel se generan sin encriptar.
+
+✅ LISTO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 5: Personalizar config.json
+
+1. Abre Bloc de notas (o VS Code/Notepad++)
+
+2. Abre archivo: C:\Reportes\Telcel\Scripts\config.json
+
+3. REVISA estos valores (probablemente estén correctos):
+   
+   - "csv_entrada": debe apuntar a C:\Reportes\Telcel\leads_diarios.csv
+   - "carpeta_salida": debe apuntar a C:\Reportes\Telcel\Excel_Generados
+   - "hora_ejecucion": debe ser "09:00"
+   
+   Si están correctos, no cambies nada.
+
+4. VERIFICA los ejecutivos de tu región en "regiones":
+   
+   Busca tu región (ej: R1) y verifica que los emails sean correctos:
+   {
+     "R1": {
+       "nombre": "Región 1",
+       "ejecutivos": {
+         "junior": "ignacio.sanchez@telcel.com",  ← Actualiza si es necesario
+         "senior": "melpadsa@telcel.com"          ← Actualiza si es necesario
+       }
+     }
+   }
+   
+   Si cambias algo, guarda el archivo (Ctrl+S).
+
+5. Cierra el archivo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 6: Probar el Sistema (SIN SFMC)
+
+1. Abre el archivo ejemplo_leads_diarios.csv con Excel o Bloc de Notas
+
+2. Cambia las fechas del campo CreatedAt al día de AYER
+   (El script solo procesa leads del día anterior)
+
+3. Guarda el archivo como leads_diarios.csv en la carpeta raíz del proyecto
+   (Un nivel arriba de Scripts\, según la ruta en config.json)
+
+4. Presiona: Windows Key + R
+5. Escribe: cmd
+6. Presiona: Enter
+
+7. Copia-pega estos comandos (uno por uno):
+
+   cd C:\Reportes\Telcel\Scripts
+   python generar_reportes.py
+
+8. Presiona: Enter y espera a que termine (~5-10 segundos)
+
+Output esperado:
+   ============================================================
+   🚀 GENERADOR DE REPORTES TELCEL EMPRESAS v1.4
+   ============================================================
+   Fecha: 13-03-2026 09:00:00
+
+   📖 Leyendo CSV: C:\Reportes\Telcel\leads_diarios.csv
+   ✅ 20 registros cargados
+
+   📅 Leads del 12-03-2026: 20
+
+   📊 Distribución de Leads:
+     R1: 3 leads
+     R2: 2 leads
+     ...
+
+   📝 Generando archivos Excel con protección...
+
+   ✅ R1: R1-leads-calificados-x-dia-r1-2026-03-13.xlsx (3 leads) 🔒 PROTEGIDO R1TELABC
+   ✅ R2: R2-leads-calificados-x-dia-r2-2026-03-13.xlsx (2 leads) 🔒 PROTEGIDO R2TELX4F
+   ...
+
+   🔐 Contraseñas guardadas en: CONTRASEÑAS_13032026.txt
+
+   ============================================================
+   ✅ PROCESO COMPLETADO
+   ============================================================
+
+✅ SI VES 🔒 PROTEGIDO: msoffcrypto-tool funciona, Excel encriptados
+✅ SI VES ✅ CREADO: Excel generados sin encriptar (instala msoffcrypto-tool)
+
+9. Abre Explorador → Excel_Generados\
+
+   Debes ver:
+   - R1-leads-calificados-x-dia-r1-2026-03-13.xlsx  ← Excel encriptado
+   - R2-leads-calificados-x-dia-r2-2026-03-13.xlsx
+   - ... (más Excel por región)
+   - CONTRASEÑAS_13032026.txt  ← Abre este y verifica contraseñas
+
+✅ TODO FUNCIONA - LISTO PARA PRODUCCIÓN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 7: Instalar Automatización (Task Scheduler)
+
+IMPORTANTE: Este paso hace que el script se ejecute automáticamente a las 9 AM
+cada día.
+
+1. Abre Explorador → C:\Reportes\Telcel\Scripts\
+
+2. Busca el archivo: instalar_scheduler_windows.bat
+
+3. CLICK DERECHO en el archivo
+
+4. Selecciona: "Ejecutar como administrador"
+   
+   (Si ves ventana de permiso, haz clic en: "Sí")
+
+5. Se abrirá una ventana CMD negra mostrando progreso
+
+Output esperado:
+   ========================================
+   Configurador de Automatización - Telcel
+   ========================================
+   
+   [OK] Ejecutando como administrador
+   
+   [*] Creando tarea programada...
+   
+   [OK] Tarea creada exitosamente!
+   
+   Detalles:
+     - Nombre: TelcelReportesAuto_9AM
+     - Hora: 09:00:00 (09:00 AM)
+     - Frecuencia: Diaria
+     - Script: generar_reportes.py
+
+6. Presiona cualquier tecla para cerrar la ventana
+
+✅ LISTO - La tarea está instalada
+
+VERIFICACIÓN:
+1. Presiona: Windows Key + R
+2. Escribe: taskmgr
+3. Presiona: Enter (abre Task Manager)
+4. Haz clic en pestaña: "Task Scheduler Library" (si está disponible)
+   O: Busca en Control Panel → Task Scheduler
+5. Debes ver la tarea: TelcelReportesAuto_9AM
+
+✅ Confirmado - Se ejecutará automáticamente mañana a las 9 AM
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 8: Limpiar y Preparar para Producción
+
+1. Elimina o renombra el leads_diarios.csv de prueba
+
+2. Elimina los archivos de prueba de Excel_Generados\
+   Déjalo vacío para la próxima ejecución real
+
+3. Verifica que tienes los archivos críticos:
+
+   ✓ C:\Reportes\Telcel\Scripts\generar_reportes.py
+   ✓ C:\Reportes\Telcel\Scripts\config.json
+   ✓ C:\Reportes\Telcel\Scripts\ejemplo_leads_diarios.csv (para referencia)
+
+✅ LISTO PARA PRODUCCIÓN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 9: Exportar CSV Real de SFMC
+
+Mañana (o cuando necesites hacer el primer reporte real):
+
+1. Abre SFMC (Salesforce Marketing Cloud)
+   Dirección: https://mc.YOUR_INSTANCE.salesforce.com/
+
+2. Navega a:
+   Contacts → Data Extensions → "de-sol-forms"
+
+3. Haz clic en: Download
+   → Formato: CSV
+   → Incluir: Todos los campos
+
+4. Guarda el archivo en:
+   C:\Reportes\Telcel\leads_diarios.csv
+   
+   (Sobrescribe el archivo anterior)
+
+5. El script se ejecutará automáticamente a las 9 AM y generará los reportes
+
+✅ LISTO - Mañana a las 9 AM tendrás los reportes generados
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PASO 10: Workflow Diario (A partir de mañana)
+
+MAÑANA A LAS 9 AM (Automático):
+1. Script se ejecuta automáticamente
+2. Lee CSV de SFMC
+3. Genera 11 Excel
+4. Crea instrucciones de email
+
+MAÑANA DESPUÉS DE LAS 9 AM (Manual):
+1. Abre: C:\Reportes\Telcel\Excel_Generados\CONTRASEÑAS_DDMMYYYY.txt
+   (Para ver las contraseñas aleatorias de cada región)
+
+2. Para cada región con Excel generado:
+   a) Consulta config.json para saber a quién enviar cada región
+   b) Abre Gmail en el navegador
+   c) Haz clic en "Redactar"
+   d) Escribe los destinatarios (TO y CC según config.json)
+   e) Escribe el asunto y cuerpo del email
+   f) Menciona la contraseña en el cuerpo del email
+   g) Adjunta el Excel correspondiente (ej: R1-leads-...-YYYY-MM-DD.xlsx)
+   h) Haz clic en "Enviar"
+
+3. Repite para cada región que tenga leads
+
+✅ LISTO - Emails enviados
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST FINAL:
+
+INSTALACIÓN:
+☐ Python 3.8+ instalado
+☐ Carpetas creadas (C:\Reportes\Telcel\...)
+☐ Archivos copiados a C:\Reportes\Telcel\Scripts\
+☐ Librerías instaladas (openpyxl, msoffcrypto-tool)
+☐ config.json personalizado con rutas correctas
+☐ Script probado (Excel generados con 🔒 PROTEGIDO o ✅ CREADO)
+☐ Scheduler instalado (Task Scheduler)
+☐ Archivos de prueba eliminados
+
+PRODUCCIÓN:
+☐ CSV de SFMC descargado en la ruta configurada en config.json
+☐ Script se ejecutó automático a las 9 AM
+☐ Excel generados correctamente en Excel_Generados\
+☐ Contraseñas consultadas en CONTRASEÑAS_*.txt
+☐ Emails enviados a ejecutivos con Excel adjunto + contraseña
+
+PROBLEMAS:
+☐ Si hay error, revisa README.md → Troubleshooting
+☐ Si Python no funciona, reinstálalo incluyendo "Add to PATH"
+☐ Si CSV no se encuentra, verifica la ruta en config.json
+☐ Si Excel no se encripta, verifica: pip install msoffcrypto-tool
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 SOPORTE:
+
+Si algo no funciona:
+
+1. Lee: README.md (Troubleshooting)
+2. Ejecuta manualmente: python generar_reportes.py
+3. Lee el error que aparece
+4. Verifica:
+   - ¿Python está en PATH? (python --version)
+   - ¿config.json tiene sintaxis correcta?
+   - ¿Carpetas existen según las rutas en config.json?
+   - ¿CSV está en la ruta configurada en config.json?
+   - ¿openpyxl instalado? (pip show openpyxl)
+   - ¿msoffcrypto-tool instalado? (pip show msoffcrypto-tool)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+¡LISTO! Sistema completamente instalado y funcional. 🎉
+
+Cualquier duda, revisa la documentación:
+- RESUMEN_SISTEMA.txt
+- GUIA_RAPIDA.txt
+- README.md
+- DIAGRAMA_VISUAL_SISTEMA.txt
+
+Creado: 13-03-2026
+Versión: 1.4 FINAL

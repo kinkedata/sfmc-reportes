@@ -1,0 +1,112 @@
+{
+  "rutas": {
+    "csv_entrada": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\leads_diarios.csv",
+    "carpeta_salida": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\Excel_Generados",
+    "carpeta_respaldo": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\Respaldo",
+    "hora_ejecucion": "09:00"
+  },
+  "regiones": {
+    "R1": {
+      "nombre": "Región 1",
+      "ejecutivos": {
+        "junior": "ignacio.sanchez@telcel.com",
+        "senior": "melpadsa@telcel.com"
+      }
+    },
+    "R2": {
+      "nombre": "Región 2",
+      "ejecutivos": {
+        "junior": "manuel.zuniga@telcel.com",
+        "senior": "adrian.huerta@telcel.com"
+      }
+    },
+    "R3": {
+      "nombre": "Región 3",
+      "ejecutivos": {
+        "junior": "alberto.sifuentes@telcel.com",
+        "senior": "marvilce@telcel.com"
+      }
+    },
+    "R4": {
+      "nombre": "Región 4",
+      "ejecutivos": {
+        "junior": "americo.chapa@telcel.com",
+        "senior": "marsanva@telcel.com"
+      }
+    },
+    "R5": {
+      "nombre": "Región 5",
+      "ejecutivos": {
+        "junior": "alejandra.munoz@telcel.com",
+        "senior": "luiortpa@telcel.com"
+      }
+    },
+    "R6": {
+      "nombre": "Región 6",
+      "ejecutivos": {
+        "junior": "luialdve@telcel.com",
+        "senior": "jorge.galvan@telcel.com"
+      }
+    },
+    "R7": {
+      "nombre": "Región 7",
+      "ejecutivos": {
+        "junior": "juan.galicia@telcel.com",
+        "senior": "mauricio.apam@telcel.com"
+      }
+    },
+    "R8": {
+      "nombre": "Región 8",
+      "ejecutivos": {
+        "junior": "maria.rodriguez@telcel.com",
+        "senior": "julio.delarosa@telcel.com"
+      }
+    },
+    "R9": {
+      "nombre": "Región 9",
+      "ejecutivos": {
+        "junior": "alma.laura@telcel.com",
+        "senior": "alma.laura@telcel.com"
+      }
+    },
+    "MOM": {
+      "nombre": "Mobile Marketing",
+      "ejecutivos": {
+        "contacto": "antonio.porras@telcelmkt.com"
+      }
+    },
+    "BUI": {
+      "nombre": "Business Intelligence",
+      "ejecutivos": {
+        "contacto": "antonio.porras@telcelmkt.com"
+      }
+    }
+  },
+  "contactos_copia": {
+    "marketing": "gisela.sosa@demo.reseller.telcel.com",
+    "agencia": "enrique.ramirez@courtavenue.com"
+  },
+  "columnas_reporte": [
+    "Correo",
+    "Nombre",
+    "Apellido",
+    "Telefono",
+    "Estado",
+    "Municipio",
+    "RazonSocial",
+    "Cargo",
+    "OtroCargo",
+    "NoEmpleados",
+    "SolucionInteres",
+    "ServicioInteres",
+    "Mensaje",
+    "CreatedAt",
+    "Region",
+    "CorreoComercial"
+  ],
+  "formato_password": "dinamico_fecha",
+  "opciones_password": {
+    "dinamico_fecha": "{REGION}_{DDMMYYYY}",
+    "dinamico_aleatorio": "{REGION}_TEL{RANDOM}"
+  }
+}
