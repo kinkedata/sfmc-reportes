@@ -19,11 +19,19 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 
 from generar_reportes import ReporteLeads
+import gmail_drafts
 
 app = Flask(__name__)
 
 _output_queue = queue.Queue()
 _generation_lock = threading.Lock()
+
+# Resultados de la última generación (para el módulo Gmail)
+_last_result = {
+    'archivos_por_region': {},   # { 'R1': '/ruta/R1-leads-...xlsx', ... }
+    'contraseñas': {},            # { 'R1': 'R1TELXXX', ... }
+    'periodo_legible': '',
+}
 
 
 class _StreamCapture:
@@ -42,6 +50,7 @@ class _StreamCapture:
 
 
 def _run_generation(fechas_dates):
+    global _last_result
     old_stdout = sys.stdout
     sys.stdout = _StreamCapture(_output_queue, old_stdout)
     try:
@@ -51,6 +60,15 @@ def _run_generation(fechas_dates):
         carpeta_csv = generador.config['rutas']['carpeta_csv']
         csv_path = os.path.join(carpeta_csv, f'leads_diarios_{fecha_hoy}.csv')
         ok = generador.generar_todos_reportes(csv_path)
+
+        # Guardar resultados para Gmail
+        _last_result = {
+            'archivos_por_region': {
+                a['region']: a['ruta'] for a in generador.archivos_generados
+            },
+            'contraseñas': dict(generador.contraseñas_generadas),
+            'periodo_legible': generador._periodo_legible(),
+        }
 
         carpeta = Path(generador.config['rutas']['carpeta_salida'])
         archivos = sorted(
@@ -87,7 +105,6 @@ def generar():
             _generation_lock.release()
             return jsonify({'error': 'La fecha inicio no puede ser mayor a la fecha fin'}), 400
 
-        # Limpiar mensajes anteriores
         while not _output_queue.empty():
             try:
                 _output_queue.get_nowait()
@@ -140,6 +157,33 @@ def descargar(filename):
     return send_file(str(filepath.resolve()), as_attachment=True, download_name=filename)
 
 
+@app.route('/gmail/estado')
+def gmail_estado():
+    """Devuelve si hay token válido guardado."""
+    autorizado = gmail_drafts.token_valido(script_dir)
+    tiene_datos = bool(_last_result.get('periodo_legible'))
+    return jsonify({'autorizado': autorizado, 'tiene_datos': tiene_datos})
+
+
+@app.route('/gmail/borradores', methods=['POST'])
+def gmail_borradores():
+    """Crea los 11 borradores en Gmail. Abre el navegador la primera vez para autorizar."""
+    if not _last_result.get('periodo_legible'):
+        return jsonify({'error': 'Primero genera los reportes.'}), 400
+
+    try:
+        resultados = gmail_drafts.crear_borradores(
+            script_dir=script_dir,
+            archivos_por_region=_last_result['archivos_por_region'],
+            contraseñas=_last_result['contraseñas'],
+            periodo_legible=_last_result['periodo_legible'],
+        )
+        total_ok = sum(1 for r in resultados if r['ok'])
+        return jsonify({'ok': True, 'total': len(resultados), 'creados': total_ok, 'detalle': resultados})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     print("\n========================================")
     print("  Reportes Telcel Empresas - Servidor")
@@ -147,4 +191,4 @@ if __name__ == '__main__':
     print("  Abre en tu navegador:")
     print("  http://localhost:5000")
     print("========================================\n")
-    app.run(debug=False, port=5000, host='127.0.0.1')
+    app.run(debug=False, port=5000, host='127.0.0.1', threaded=True)

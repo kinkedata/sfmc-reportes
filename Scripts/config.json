@@ -104,6 +104,92 @@
     "Region",
     "CorreoComercial"
   ],
+  "destinatarios": {
+    "R1": [
+      "melpadsa@telcel.com",
+      "ignacio.sanchez@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>",
+      "berenice.garcia@telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>"
+    ],
+    "R2": [
+      "manuel.zuniga@telcel.com",
+      "adrian.huerta@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R3": [
+      "alberto.sifuentes@telcel.com",
+      "marvilce@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R4": [
+      "americo.chapa@telcel.com",
+      "marvilce@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R5": [
+      "alejandra.munoz@telcel.com",
+      "luiortpa@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R6": [
+      "luialdve@telcel.com",
+      "jorge.galvan@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R7": [
+      "Juan Carlos Galicia Hernandez <juan.galicia@telcel.com>",
+      "mauricio.apam@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R8": [
+      "maria.rodriguez@telcel.com",
+      "julio.delarosa@telcel.com",
+      "berenice.garcia@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "R9": [
+      "alma.laura@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "MOM": [
+      "antonio.porras@telcelmkt.com",
+      "smsmarketing@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ],
+    "BUI": [
+      "antonio.porras@telcelmkt.com",
+      "smsmarketing@telcel.com",
+      "gisela.sosa@demo.reseller.telcel.com",
+      "TANIA DENISSE CORTES BADILLO <tania.cortes@telcel.com>",
+      "JOSE IGNACIO TORRES SALGADO <jose.salgado@telcel.com>"
+    ]
+  },
   "formato_password": "dinamico_fecha",
   "opciones_password": {
     "dinamico_fecha": "{REGION}_{DDMMYYYY}",

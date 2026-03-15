@@ -9,7 +9,11 @@
       "Bash(python3 -c \"import flask; print\\(''''Flask'''', flask.__version__\\)\")",
       "Bash(python3 -m pip install openpyxl msoffcrypto-tool -q)",
       "Bash(python3 -c \"import openpyxl; print\\(''openpyxl OK''\\)\")",
-      "Bash(ls \"c:/laragon/www/CourtAvenue/sfmc-reportes/\"leads_diarios_*.csv)"
+      "Bash(ls \"c:/laragon/www/CourtAvenue/sfmc-reportes/\"leads_diarios_*.csv)",
+      "Bash(python3 -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib -q)",
+      "Bash(python3 -c \"from google.auth.transport.requests import Request; print\\(''OK''\\)\")",
+      "Bash(python -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib -q)",
+      "Bash(python -c \"from google.auth.transport.requests import Request; print\\(''OK''\\)\")"
     ]
   }
 }

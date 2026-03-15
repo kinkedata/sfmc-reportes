@@ -297,6 +297,48 @@
       padding: 24px 0;
     }
 
+    /* Gmail card */
+    .btn-gmail {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 28px;
+      background: #fff;
+      color: #1a2332;
+      border: 2px solid #d1dae6;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-gmail:hover:not(:disabled) {
+      border-color: #4285F4;
+      color: #4285F4;
+      background: #f0f4ff;
+    }
+    .btn-gmail:disabled { opacity: 0.5; cursor: not-allowed; }
+    .gmail-logo { font-size: 20px; }
+
+    .gmail-result {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .gmail-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .gmail-tag.ok    { background: #dcfce7; color: #166534; }
+    .gmail-tag.fail  { background: #fee2e2; color: #991b1b; }
+    .gmail-tag.empty { background: #f1f5f9; color: #64748b; }
+
     /* Hidden */
     .hidden { display: none !important; }
   </style>
@@ -376,6 +418,25 @@
         <div class="files-grid" id="files-grid">
           <p class="files-empty">Aquí aparecerán los archivos al terminar la generación.</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Gmail card -->
+    <div class="card" id="gmail-card">
+      <div class="card-header">
+        <div class="card-icon">✉️</div>
+        <h2>Borradores en Gmail</h2>
+      </div>
+      <div class="card-body">
+        <p style="font-size:14px; color:#475569; margin-bottom:16px;">
+          Crea los 11 borradores listos para enviar desde <strong>enrique.ramirez@courtavenue.com</strong>.
+          La primera vez abrirá el navegador para autorizar el acceso.
+        </p>
+        <button class="btn-gmail" id="btn-gmail" onclick="crearBorradores()">
+          <span class="gmail-logo">📧</span>
+          <span id="btn-gmail-text">Crear borradores en Gmail</span>
+        </button>
+        <div class="gmail-result hidden" id="gmail-result"></div>
       </div>
     </div>
 
@@ -562,6 +623,7 @@
           document.getElementById('btn-icon').textContent = '▶';
           document.getElementById('btn-text').textContent = 'Generar reportes';
           renderFiles(msg.archivos);
+          if (msg.success) resetGmail();
           eventSource.close();
         }
       };
@@ -593,6 +655,61 @@
         document.getElementById('btn-icon').textContent = '▶';
         document.getElementById('btn-text').textContent = 'Generar reportes';
       });
+    }
+
+    // ── Gmail ───────────────────────────────────────────────
+    function resetGmail() {
+      document.getElementById('btn-gmail').disabled = false;
+      document.getElementById('btn-gmail-text').textContent = 'Crear borradores en Gmail';
+      document.getElementById('gmail-result').classList.add('hidden');
+      document.getElementById('gmail-result').innerHTML = '';
+    }
+
+    async function crearBorradores() {
+      const btn = document.getElementById('btn-gmail');
+      const btnText = document.getElementById('btn-gmail-text');
+      const resultDiv = document.getElementById('gmail-result');
+
+      btn.disabled = true;
+      btnText.textContent = 'Creando borradores… (puede tomar unos segundos)';
+      resultDiv.classList.add('hidden');
+      resultDiv.innerHTML = '';
+
+      try {
+        const res = await fetch('/gmail/borradores', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          btnText.textContent = '❌ ' + data.error;
+          btn.disabled = false;
+          return;
+        }
+
+        btnText.textContent = `✅ ${data.creados} de ${data.total} borradores creados en Gmail`;
+        btn.disabled = false;
+
+        resultDiv.classList.remove('hidden');
+        data.detalle.forEach(r => {
+          const tag = document.createElement('span');
+          const tipo = r.tiene_leads ? '' : ' (sin leads)';
+          if (r.ok) {
+            tag.className = 'gmail-tag ' + (r.tiene_leads ? 'ok' : 'empty');
+            tag.textContent = '✓ ' + r.region + tipo;
+          } else {
+            tag.className = 'gmail-tag fail';
+            tag.textContent = '✗ ' + r.region + ': ' + r.error;
+          }
+          resultDiv.appendChild(tag);
+        });
+
+      } catch (err) {
+        btnText.textContent = 'Crear borradores en Gmail';
+        btn.disabled = false;
+        alert('Error de conexión: ' + err.message);
+      }
     }
   </script>
 

@@ -67,6 +67,8 @@ class ReporteLeads:
             'MOM': [], 'BUI': []
         }
         self._log = []
+        self.contraseñas_generadas = {}
+        self.archivos_generados = []
 
         self.crear_carpetas()
     
@@ -291,6 +293,8 @@ class ReporteLeads:
             except Exception as e:
                 self._print(f"❌ Error generando {region}: {str(e)}")
 
+        self.contraseñas_generadas = contraseñas
+        self.archivos_generados = archivos_generados
         self.crear_reporte_contraseñas(contraseñas)
 
         self._print(f"\n{'='*60}")
