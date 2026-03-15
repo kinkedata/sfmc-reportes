@@ -1,6 +1,6 @@
 {
   "rutas": {
-    "csv_entrada": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\leads_diarios.csv",
+    "carpeta_csv": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes",
     "carpeta_salida": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\Excel_Generados",
     "carpeta_respaldo": "C:\\laragon\\www\\CourtAvenue\\sfmc-reportes\\Respaldo",
     "hora_ejecucion": "09:00"

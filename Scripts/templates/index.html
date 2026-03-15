@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes Telcel Empresas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #1a2332;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: #00529B;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,82,155,0.3);
+    }
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      color: #00529B;
+      letter-spacing: -0.5px;
+    }
+    .header h1 {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .header-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+      margin-left: auto;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e8edf3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a2332;
+    }
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #e8f0fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .card-body {
+      padding: 24px;
+    }
+
+    /* Date section */
+    .date-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .date-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .date-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .date-field input[type="date"] {
+      padding: 9px 12px;
+      border: 1.5px solid #d1dae6;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1a2332;
+      background: white;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 160px;
+    }
+    .date-field input[type="date"]:focus {
+      border-color: #00529B;
+      box-shadow: 0 0 0 3px rgba(0,82,155,0.1);
+    }
+    .date-separator {
+      font-size: 20px;
+      color: #94a3b8;
+      margin-top: 22px;
+    }
+
+    /* Presets */
+    .presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .preset-btn {
+      padding: 7px 14px;
+      border: 1.5px solid #d1dae6;
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover {
+      border-color: #00529B;
+      color: #00529B;
+      background: #f0f6ff;
+    }
+    .preset-btn.active {
+      border-color: #00529B;
+      background: #00529B;
+      color: white;
+    }
+
+    /* Generate button */
+    .generate-section {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-generate {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: #00529B;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,82,155,0.3);
+    }
+    .btn-generate:hover:not(:disabled) {
+      background: #003f7a;
+      box-shadow: 0 4px 16px rgba(0,82,155,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .period-display {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .period-display strong {
+      color: #1a2332;
+    }
+
+    /* Console */
+    .console {
+      background: #0f1923;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      color: #e2e8f0;
+    }
+    .console-line {
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .console-line.success { color: #4ade80; }
+    .console-line.error   { color: #f87171; }
+    .console-line.warn    { color: #fbbf24; }
+    .console-line.info    { color: #60a5fa; }
+    .console-line.dim     { color: #64748b; }
+    .console-empty {
+      color: #475569;
+      font-style: italic;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-badge.idle    { background: #f1f5f9; color: #64748b; }
+    .status-badge.running { background: #fef3c7; color: #92400e; }
+    .status-badge.done    { background: #dcfce7; color: #166534; }
+    .status-badge.failed  { background: #fee2e2; color: #991b1b; }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .dot.pulse {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* Files section */
+    .files-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px solid #e8edf3;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #1a2332;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .file-item:hover {
+      border-color: #00529B;
+      background: #f0f6ff;
+      color: #00529B;
+    }
+    .file-icon { font-size: 20px; flex-shrink: 0; }
+    .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .file-dl { font-size: 16px; color: #94a3b8; }
+    .file-item:hover .file-dl { color: #00529B; }
+
+    .files-empty {
+      color: #94a3b8;
+      font-size: 14px;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-logo">T</div>
+    <h1>Reportes Telcel Empresas</h1>
+    <span class="header-sub">Generador de leads por región</span>
+  </header>
+
+  <div class="container">
+
+    <!-- Config card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <h2>Período del reporte</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="date-row">
+          <div class="date-field">
+            <label>Fecha inicio</label>
+            <input type="date" id="fecha-inicio">
+          </div>
+          <span class="date-separator">→</span>
+          <div class="date-field">
+            <label>Fecha fin</label>
+            <input type="date" id="fecha-fin">
+          </div>
+        </div>
+
+        <div class="presets">
+          <button class="preset-btn active" onclick="setPreset(this, 'ayer')">Ayer</button>
+          <button class="preset-btn" onclick="setPreset(this, 'lunes')">Lunes (V–D)</button>
+          <button class="preset-btn" onclick="setPreset(this, 'ultimos3')">Últimos 3 días</button>
+          <button class="preset-btn" onclick="setPreset(this, 'semana')">Esta semana</button>
+          <button class="preset-btn" onclick="setPreset(this, 'hoy')">Hoy</button>
+        </div>
+
+        <div class="generate-section">
+          <button class="btn-generate" id="btn-generar" onclick="iniciarGeneracion()">
+            <span id="btn-icon">▶</span>
+            <span id="btn-text">Generar reportes</span>
+          </button>
+          <span class="period-display" id="period-display"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Console card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🖥</div>
+        <h2>Consola</h2>
+        <span id="status-badge" class="status-badge idle" style="margin-left:auto">
+          <span class="dot"></span> Listo
+        </span>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="console" id="console">
+          <span class="console-empty">Configura las fechas y presiona "Generar reportes".</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Files card -->
+    <div class="card" id="files-card">
+      <div class="card-header">
+        <div class="card-icon">📁</div>
+        <h2>Archivos generados</h2>
+      </div>
+      <div class="card-body">
+        <div class="files-grid" id="files-grid">
+          <p class="files-empty">Aquí aparecerán los archivos al terminar la generación.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Presets ────────────────────────────────────────────
+    function toISO(d) {
+      return d.toISOString().split('T')[0];
+    }
+
+    function setDates(start, end) {
+      document.getElementById('fecha-inicio').value = toISO(start);
+      document.getElementById('fecha-fin').value   = toISO(end);
+      updatePeriodDisplay();
+    }
+
+    function setPreset(btn, preset) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const day = today.getDay(); // 0=Dom, 1=Lun, ...
+
+      if (preset === 'hoy') {
+        setDates(today, today);
+
+      } else if (preset === 'ayer') {
+        const ayer = new Date(today); ayer.setDate(today.getDate() - 1);
+        setDates(ayer, ayer);
+
+      } else if (preset === 'lunes') {
+        // Viernes-Domingo pasado (útil para el Lunes)
+        const viernes = new Date(today);
+        viernes.setDate(today.getDate() - ((day + 2) % 7) - 1);
+        const domingo = new Date(viernes); domingo.setDate(viernes.getDate() + 2);
+        setDates(viernes, domingo);
+
+      } else if (preset === 'ultimos3') {
+        const inicio = new Date(today); inicio.setDate(today.getDate() - 3);
+        const fin    = new Date(today); fin.setDate(today.getDate() - 1);
+        setDates(inicio, fin);
+
+      } else if (preset === 'semana') {
+        // Lunes a ayer
+        const lunes = new Date(today);
+        lunes.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+        const ayer = new Date(today); ayer.setDate(today.getDate() - 1);
+        setDates(lunes, ayer);
+      }
+    }
+
+    function updatePeriodDisplay() {
+      const inicio = document.getElementById('fecha-inicio').value;
+      const fin    = document.getElementById('fecha-fin').value;
+      const el = document.getElementById('period-display');
+      if (!inicio || !fin) { el.textContent = ''; return; }
+
+      const d1 = new Date(inicio + 'T00:00:00');
+      const d2 = new Date(fin    + 'T00:00:00');
+      const diff = Math.round((d2 - d1) / 86400000) + 1;
+
+      const fmt = d => d.toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'});
+      if (inicio === fin) {
+        el.innerHTML = `<strong>${fmt(d1)}</strong> · 1 día`;
+      } else {
+        el.innerHTML = `<strong>${fmt(d1)}</strong> al <strong>${fmt(d2)}</strong> · ${diff} días`;
+      }
+    }
+
+    document.getElementById('fecha-inicio').addEventListener('change', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      updatePeriodDisplay();
+    });
+    document.getElementById('fecha-fin').addEventListener('change', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      updatePeriodDisplay();
+    });
+
+    // Init: ayer por defecto
+    setPreset(document.querySelector('.preset-btn'), 'ayer');
+
+    // ── Consola ────────────────────────────────────────────
+    function classifyLine(text) {
+      if (text.includes('❌') || text.toLowerCase().includes('error')) return 'error';
+      if (text.includes('⚠️') || text.toLowerCase().includes('warning')) return 'warn';
+      if (text.includes('✅') || text.includes('🔒') || text.includes('COMPLETADO')) return 'success';
+      if (text.includes('📅') || text.includes('📊') || text.includes('📖') ||
+          text.includes('🚀') || text.includes('📝') || text.includes('🔐')) return 'info';
+      if (text.startsWith('=') || text.trim() === '') return 'dim';
+      return '';
+    }
+
+    function appendLog(text) {
+      const console_ = document.getElementById('console');
+      // Limpiar mensaje inicial
+      const empty = console_.querySelector('.console-empty');
+      if (empty) empty.remove();
+
+      const line = document.createElement('div');
+      line.className = 'console-line ' + classifyLine(text);
+      line.textContent = text;
+      console_.appendChild(line);
+      console_.scrollTop = console_.scrollHeight;
+    }
+
+    function setStatus(state) {
+      const badge = document.getElementById('status-badge');
+      const labels = {
+        idle:    ['idle',    '●', 'Listo'],
+        running: ['running', '●', 'Generando...'],
+        done:    ['done',    '●', 'Completado'],
+        failed:  ['failed',  '●', 'Error'],
+      };
+      const [cls, , text] = labels[state];
+      badge.className = `status-badge ${cls}`;
+      const dot = badge.querySelector('.dot');
+      dot.className = 'dot' + (state === 'running' ? ' pulse' : '');
+      badge.innerHTML = `<span class="dot${state==='running'?' pulse':''}"></span> ${text}`;
+    }
+
+    // ── Archivos ───────────────────────────────────────────
+    function renderFiles(archivos) {
+      const grid = document.getElementById('files-grid');
+      if (!archivos || archivos.length === 0) {
+        grid.innerHTML = '<p class="files-empty">No se generaron archivos.</p>';
+        return;
+      }
+      grid.innerHTML = '';
+      archivos.forEach(nombre => {
+        const isPass = nombre.startsWith('CONTRASEÑAS');
+        const icon = isPass ? '🔐' : '📊';
+        const a = document.createElement('a');
+        a.className = 'file-item';
+        a.href = `/descargar/${encodeURIComponent(nombre)}`;
+        a.download = nombre;
+        a.innerHTML = `
+          <span class="file-icon">${icon}</span>
+          <span class="file-name" title="${nombre}">${nombre}</span>
+          <span class="file-dl">⬇</span>
+        `;
+        grid.appendChild(a);
+      });
+    }
+
+    // ── Generación ─────────────────────────────────────────
+    let eventSource = null;
+
+    function iniciarGeneracion() {
+      const inicio = document.getElementById('fecha-inicio').value;
+      const fin    = document.getElementById('fecha-fin').value;
+
+      if (!inicio || !fin) {
+        alert('Por favor selecciona las fechas de inicio y fin.');
+        return;
+      }
+
+      // Limpiar consola
+      const console_ = document.getElementById('console');
+      console_.innerHTML = '';
+
+      setStatus('running');
+      document.getElementById('btn-generar').disabled = true;
+      document.getElementById('btn-icon').textContent = '⏳';
+      document.getElementById('btn-text').textContent = 'Generando...';
+      document.getElementById('files-grid').innerHTML =
+        '<p class="files-empty">Generando archivos…</p>';
+
+      // Iniciar SSE
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource('/stream');
+      eventSource.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'ping') return;
+        if (msg.type === 'log')  { appendLog(msg.text); return; }
+        if (msg.type === 'error') {
+          appendLog('❌ ' + msg.text);
+          return;
+        }
+        if (msg.type === 'done') {
+          setStatus(msg.success ? 'done' : 'failed');
+          document.getElementById('btn-generar').disabled = false;
+          document.getElementById('btn-icon').textContent = '▶';
+          document.getElementById('btn-text').textContent = 'Generar reportes';
+          renderFiles(msg.archivos);
+          eventSource.close();
+        }
+      };
+      eventSource.onerror = () => {
+        appendLog('⚠️ Conexión perdida con el servidor.');
+        eventSource.close();
+      };
+
+      // Llamar al endpoint
+      fetch('/generar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({fecha_inicio: inicio, fecha_fin: fin})
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          appendLog('❌ ' + data.error);
+          setStatus('failed');
+          document.getElementById('btn-generar').disabled = false;
+          document.getElementById('btn-icon').textContent = '▶';
+          document.getElementById('btn-text').textContent = 'Generar reportes';
+        }
+      })
+      .catch(err => {
+        appendLog('❌ Error de conexión: ' + err.message);
+        setStatus('failed');
+        document.getElementById('btn-generar').disabled = false;
+        document.getElementById('btn-icon').textContent = '▶';
+        document.getElementById('btn-text').textContent = 'Generar reportes';
+      });
+    }
+  </script>
+
+</body>
+</html>

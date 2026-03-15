@@ -19,29 +19,61 @@ from pathlib import Path
 import subprocess
 import shutil
 
+DIAS_ES = {
+    'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
+    'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
+}
+
+ORDEN_REGIONES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'MOM', 'BUI']
+
+NOMBRES_REGION = {
+    'R1': ('R1', 'la R1'), 'R2': ('R2', 'la R2'), 'R3': ('R3', 'la R3'),
+    'R4': ('R4', 'la R4'), 'R5': ('R5', 'la R5'), 'R6': ('R6', 'la R6'),
+    'R7': ('R7', 'la R7'), 'R8': ('R8', 'la R8'), 'R9': ('R9', 'la R9'),
+    'MOM': ('Mobile Marketing', 'Mobile Marketing'),
+    'BUI': ('Business Intelligence', 'Business Intelligence'),
+}
+
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 class ReporteLeads:
-    def __init__(self, config_path='config.json'):
+    def __init__(self, config_path='config.json', fechas_reporte=None):
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = json.load(f)
-        
+
         self.fecha_hoy = datetime.now()
-        self.fecha_ayer = self.fecha_hoy - timedelta(days=1)
         self.fecha_str = self.fecha_hoy.strftime('%d%m%Y')
         self.fecha_excel = self.fecha_hoy.strftime('%Y-%m-%d')
         self.dia_nombre = self.fecha_hoy.strftime('%A').capitalize()
+
+        if fechas_reporte:
+            self.fechas_reporte = set(fechas_reporte)
+            if len(fechas_reporte) == 1:
+                self.periodo_str = list(fechas_reporte)[0].strftime('%d-%m-%Y')
+            else:
+                d_min = min(fechas_reporte).strftime('%d-%m-%Y')
+                d_max = max(fechas_reporte).strftime('%d-%m-%Y')
+                self.periodo_str = f"{d_min} al {d_max}"
+        else:
+            self.fecha_ayer = self.fecha_hoy - timedelta(days=1)
+            self.fechas_reporte = {self.fecha_ayer.date()}
+            self.periodo_str = self.fecha_ayer.strftime('%d-%m-%Y')
         
         self.leads_por_region = {
             'R1': [], 'R2': [], 'R3': [], 'R4': [], 'R5': [],
             'R6': [], 'R7': [], 'R8': [], 'R9': [],
             'MOM': [], 'BUI': []
         }
-        
+        self._log = []
+
         self.crear_carpetas()
     
+    def _print(self, msg=''):
+        print(msg)
+        self._log.append(str(msg))
+
     def crear_carpetas(self):
         """Crea carpetas de salida si no existen"""
         Path(self.config['rutas']['carpeta_salida']).mkdir(parents=True, exist_ok=True)
@@ -49,18 +81,18 @@ class ReporteLeads:
     
     def leer_csv(self, ruta_csv):
         """Lee el CSV exportado de SFMC"""
-        print(f"📖 Leyendo CSV: {ruta_csv}")
-        
+        self._print(f"📖 Leyendo CSV: {ruta_csv}")
+
         if not os.path.exists(ruta_csv):
             raise FileNotFoundError(f"❌ No encontrado: {ruta_csv}")
-        
+
         leads = []
         with open(ruta_csv, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 leads.append(row)
-        
-        print(f"✅ {len(leads)} registros cargados")
+
+        self._print(f"✅ {len(leads)} registros cargados")
         return leads
     
     def filtrar_por_fecha(self, leads):
@@ -88,12 +120,12 @@ class ReporteLeads:
                     except ValueError:
                         continue
                 
-                if fecha_creacion and fecha_creacion.date() == self.fecha_ayer.date():
+                if fecha_creacion and fecha_creacion.date() in self.fechas_reporte:
                     leads_filtrados.append(lead)
             except:
                 continue
-        
-        print(f"📅 Leads del {self.fecha_ayer.strftime('%d-%m-%Y')}: {len(leads_filtrados)}")
+
+        self._print(f"📅 Período {self.periodo_str}: {len(leads_filtrados)} leads")
         return leads_filtrados
     
     def clasificar_leads(self, leads):
@@ -109,10 +141,10 @@ class ReporteLeads:
             elif region in self.leads_por_region:
                 self.leads_por_region[region].append(lead)
         
-        print("\n📊 Distribución de Leads:")
+        self._print("\n📊 Distribución de Leads:")
         for region, leads_list in self.leads_por_region.items():
             if leads_list:
-                print(f"  {region}: {len(leads_list)} leads")
+                self._print(f"  {region}: {len(leads_list)} leads")
     
     def generar_password(self, region):
         """Genera contraseña: R1TELXXX (3 caracteres aleatorios)"""
@@ -154,22 +186,7 @@ class ReporteLeads:
         for col_num, columna in enumerate(columnas, 1):
             ancho = max(len(str(columna)), 20)
             ws.column_dimensions[get_column_letter(col_num)].width = ancho
-        
-        info_fill = PatternFill(start_color="F2F7F9", end_color="F2F7F9", fill_type="solid")
-        info_row = len(leads) + 3
-        
-        cells_info = [
-            (info_row, 1, f"Reporte generado: {self.fecha_hoy.strftime('%d-%m-%Y %H:%M:%S')}"),
-            (info_row + 1, 1, f"Período: {self.fecha_ayer.strftime('%d-%m-%Y')}"),
-            (info_row + 2, 1, f"Total de registros: {len(leads)}"),
-        ]
-        
-        for row, col, valor in cells_info:
-            cell = ws.cell(row=row, column=col)
-            cell.value = valor
-            cell.fill = info_fill
-            cell.font = Font(italic=True, size=10)
-        
+
         return wb
     
     def _nombre_excel(self, region):
@@ -223,43 +240,43 @@ class ReporteLeads:
             # Devolver el archivo sin encriptar
             return ruta, password, False
         except Exception as e:
-            print(f"⚠️  Error protegiendo {region}: {e}")
+            self._print(f"⚠️  Error protegiendo {region}: {e}")
             return ruta, password, False
     
     def generar_todos_reportes(self, ruta_csv):
         """Orquesta todo el proceso"""
-        print(f"\n{'='*60}")
-        print(f"🚀 GENERADOR DE REPORTES TELCEL EMPRESAS v1.5")
-        print(f"{'='*60}")
-        print(f"Fecha: {self.fecha_hoy.strftime('%d-%m-%Y %H:%M:%S')}\n")
-        
+        self._print(f"\n{'='*60}")
+        self._print(f"🚀 GENERADOR DE REPORTES TELCEL EMPRESAS v1.5")
+        self._print(f"{'='*60}")
+        self._print(f"Fecha: {self.fecha_hoy.strftime('%d-%m-%Y %H:%M:%S')}\n")
+
         leads = self.leer_csv(ruta_csv)
         leads_validos = self.filtrar_por_fecha(leads)
-        
+
         if not leads_validos:
-            print("⚠️  No hay leads para el día anterior")
+            self._print(f"⚠️  No hay leads para el período {self.periodo_str}")
             return False
-        
+
         self.clasificar_leads(leads_validos)
-        
+
         archivos_generados = []
         contraseñas = {}
-        
-        print(f"\n📝 Generando archivos Excel con protección...\n")
-        
+
+        self._print(f"\n📝 Generando archivos Excel con protección...\n")
+
         for region, leads_region in self.leads_por_region.items():
             if not leads_region:
                 continue
-            
+
             try:
                 password = self.generar_password(region)
                 contraseñas[region] = password
-                
+
                 wb = self.crear_excel(region, leads_region)
                 ruta, pwd, protegido = self.guardar_excel_con_password(wb, region, password)
-                
+
                 estado = "🔒 PROTEGIDO" if protegido else "✅ CREADO"
-                
+
                 archivos_generados.append({
                     'region': region,
                     'archivo': ruta.name,
@@ -268,52 +285,90 @@ class ReporteLeads:
                     'password': pwd,
                     'protegido': protegido
                 })
-                
-                print(f"✅ {region}: {ruta.name} ({len(leads_region)} leads) {estado} {pwd}")
-                
+
+                self._print(f"✅ {region}: {ruta.name} ({len(leads_region)} leads) {estado} {pwd}")
+
             except Exception as e:
-                print(f"❌ Error generando {region}: {str(e)}")
-        
+                self._print(f"❌ Error generando {region}: {str(e)}")
+
         self.crear_reporte_contraseñas(contraseñas)
-        
-        print(f"\n{'='*60}")
-        print(f"✅ PROCESO COMPLETADO")
-        print(f"{'='*60}\n")
+
+        self._print(f"\n{'='*60}")
+        self._print(f"✅ PROCESO COMPLETADO")
+        self._print(f"{'='*60}\n")
         
         return True
     
+    def _fecha_legible(self, d):
+        """Devuelve 'Jueves 12' a partir de un objeto date."""
+        return f"{DIAS_ES[d.strftime('%A')]} {d.day}"
+
+    def _periodo_legible(self):
+        """Devuelve el período en formato legible: 'Jueves 12' o 'Viernes 13 al Domingo 15'."""
+        fechas = sorted(self.fechas_reporte)
+        if len(fechas) == 1:
+            return self._fecha_legible(fechas[0])
+        return f"{self._fecha_legible(fechas[0])} al {self._fecha_legible(fechas[-1])}"
+
+    def _generar_plantillas_correo(self, contraseñas):
+        """Genera las 11 plantillas de correo para todas las regiones."""
+        periodo = self._periodo_legible()
+        lineas = [
+            f"{'='*60}",
+            f"PLANTILLAS DE CORREO - {periodo}",
+            f"{'='*60}",
+        ]
+
+        for region in ORDEN_REGIONES:
+            nombre_subject, nombre_mail = NOMBRES_REGION[region]
+            lineas.append(f"\n{'─'*60}")
+            lineas.append(f"  {nombre_subject}")
+            lineas.append(f"{'─'*60}\n")
+
+            lineas.append(f"Subject: Reporte de leads {nombre_subject} ({periodo})\n")
+
+            if region in contraseñas:
+                pwd = contraseñas[region]
+                lineas.append(f"Buenos días equipo.")
+                lineas.append(f"")
+                lineas.append(f"Comparto el reporte de leads generados para {nombre_mail} correspondiente al período del {periodo}.")
+                lineas.append(f"Contraseña: {pwd}")
+                lineas.append(f"")
+                lineas.append(f"Quedo pendiente.")
+                lineas.append(f"Saludos.")
+            else:
+                lineas.append(f"Buenos días equipo.")
+                lineas.append(f"")
+                lineas.append(f"Les comento que no se han generado nuevos leads para {nombre_mail} del período del {periodo}.")
+                lineas.append(f"")
+                lineas.append(f"Quedo pendiente.")
+                lineas.append(f"Saludos.")
+
+        lineas.append(f"\n{'='*60}\n")
+        return '\n'.join(lineas)
+
     def crear_reporte_contraseñas(self, contraseñas):
-        """Crea archivo con contraseñas"""
+        """Crea archivo con contraseñas y log del proceso"""
         ruta = Path(self.config['rutas']['carpeta_salida']) / f"CONTRASEÑAS_{self.fecha_str}.txt"
-        
-        contenido = f"""
-{'='*60}
-CONTRASEÑAS DIARIAS - {self.fecha_hoy.strftime('%d de %B de %Y')}
-{'='*60}
 
-IMPORTANTE: Los archivos Excel están protegidos con contraseña.
-Al abrir el archivo, se pedirá la contraseña que aparece aquí.
+        plantillas = self._generar_plantillas_correo(contraseñas)
 
-"""
-        
+        contraseñas_section = f"{'='*60}\nCONTRASEÑAS DIARIAS - {self.fecha_hoy.strftime('%d de %B de %Y')}\n{'='*60}\n\n"
+        contraseñas_section += "IMPORTANTE: Los archivos Excel están protegidos con contraseña.\n"
+        contraseñas_section += "Al abrir el archivo, se pedirá la contraseña que aparece aquí.\n\n"
         for region, password in contraseñas.items():
-            contenido += f"{region:5s} :  {password}\n"
-        
-        contenido += f"""
-{'='*60}
-INSTRUCCIONES:
-1. Abre el archivo Excel
-2. Se te pedirá la contraseña
-3. Ingresa la contraseña de arriba
-4. ✅ El archivo se abrirá correctamente
+            contraseñas_section += f"{region:5s} :  {password}\n"
+        contraseñas_section += f"\n{'='*60}\nINSTRUCCIONES:\n1. Abre el archivo Excel\n2. Se te pedirá la contraseña\n3. Ingresa la contraseña de arriba\n4. El archivo se abrirá correctamente\n\nNOTA: Estas contraseñas son válidas SOLO para hoy.\n"
 
-NOTA: Estas contraseñas son válidas SOLO para hoy.
-"""
-        
+        log_section = f"\n{'='*60}\nLOG DEL PROCESO\n{'='*60}\n"
+        log_section += '\n'.join(self._log) + '\n'
+
+        contenido = plantillas + contraseñas_section + log_section
+
         with open(ruta, 'w', encoding='utf-8') as f:
             f.write(contenido)
-        
-        print(f"🔐 Contraseñas guardadas en: {ruta.name}")
+
+        self._print(f"🔐 Contraseñas guardadas en: {ruta.name}")
     
 
 def main():
@@ -321,7 +376,9 @@ def main():
 
     try:
         generador = ReporteLeads(config_file)
-        csv_entrada = generador.config['rutas']['csv_entrada']
+        fecha_hoy = datetime.now().strftime('%d%m%Y')
+        carpeta_csv = generador.config['rutas']['carpeta_csv']
+        csv_entrada = os.path.join(carpeta_csv, f'leads_diarios_{fecha_hoy}.csv')
         generador.generar_todos_reportes(csv_entrada)
         
     except FileNotFoundError as e:
