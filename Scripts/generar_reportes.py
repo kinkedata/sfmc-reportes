@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generador de Reportes Diarios - Telcel Empresas (v1.4 FINAL)
+Generador de Reportes Diarios - Telcel Empresas (v1.5)
 Lee CSV de SFMC y genera 11 Excel con protección de hojas + contraseña
 
 REQUISITOS:
@@ -71,6 +71,9 @@ class ReporteLeads:
             '%m/%d/%Y %I:%M:%S %p',   # 2/5/2026 6:53:43 PM (formato SFMC)
             '%m/%d/%Y %H:%M:%S',      # 2/5/2026 18:53:43
             '%d-%m-%Y %H:%M:%S',      # 05-02-2026 18:53:43
+            '%m/%d/%Y %H:%M',         # 3/12/2026 22:49 (sin segundos)
+            '%m/%d/%Y %I:%M %p',      # 3/12/2026 10:49 PM (sin segundos)
+            '%Y-%m-%d %H:%M',         # 2026-02-05 18:53 (sin segundos)
         ]
         
         for lead in leads:
@@ -226,7 +229,7 @@ class ReporteLeads:
     def generar_todos_reportes(self, ruta_csv):
         """Orquesta todo el proceso"""
         print(f"\n{'='*60}")
-        print(f"🚀 GENERADOR DE REPORTES TELCEL EMPRESAS v1.4")
+        print(f"🚀 GENERADOR DE REPORTES TELCEL EMPRESAS v1.5")
         print(f"{'='*60}")
         print(f"Fecha: {self.fecha_hoy.strftime('%d-%m-%Y %H:%M:%S')}\n")
         
@@ -314,26 +317,11 @@ NOTA: Estas contraseñas son válidas SOLO para hoy.
     
 
 def main():
-    config_file = 'config.json'
-    
-    rutas_posibles = [
-        'C:\\Reportes\\Telcel\\leads_diarios.csv',
-        '/home/usuario/Reportes/Telcel/leads_diarios.csv',
-        './leads_diarios.csv',
-        '../leads_diarios.csv',
-    ]
-    
-    csv_entrada = None
-    for ruta in rutas_posibles:
-        if os.path.exists(ruta):
-            csv_entrada = ruta
-            break
-    
-    if not csv_entrada:
-        csv_entrada = rutas_posibles[0]
-    
+    config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+
     try:
         generador = ReporteLeads(config_file)
+        csv_entrada = generador.config['rutas']['csv_entrada']
         generador.generar_todos_reportes(csv_entrada)
         
     except FileNotFoundError as e:
