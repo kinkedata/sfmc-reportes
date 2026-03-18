@@ -339,6 +339,25 @@
     .gmail-tag.fail  { background: #fee2e2; color: #991b1b; }
     .gmail-tag.empty { background: #f1f5f9; color: #64748b; }
 
+    /* Nav */
+    .nav {
+      background: #003f7a;
+      padding: 0 32px;
+      display: flex;
+      gap: 4px;
+    }
+    .nav-link {
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .nav-link:hover { color: white; }
+    .nav-link.active { color: white; border-bottom-color: #60a5fa; }
+
     /* Hidden */
     .hidden { display: none !important; }
   </style>
@@ -350,6 +369,10 @@
     <h1>Reportes Telcel Empresas</h1>
     <span class="header-sub">Generador de leads por región</span>
   </header>
+  <nav class="nav">
+    <a href="/" class="nav-link active">📊 Generador</a>
+    <a href="/conteo" class="nav-link">📈 Conteo de Leads</a>
+  </nav>
 
   <div class="container">
 

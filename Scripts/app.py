@@ -5,6 +5,8 @@ Ejecutar: python app.py
 Abrir: http://localhost:5000
 """
 
+import csv
+import glob
 import json
 import os
 import queue
@@ -20,6 +22,48 @@ sys.path.insert(0, script_dir)
 
 from generar_reportes import ReporteLeads
 import gmail_drafts
+
+# Catálogo completo de Soluciones → Servicios (fuente: SFMC)
+CATALOG = {
+    'Seguridad':                  ['Control de Dispositivos MDM', 'Control Móvil Telcel', 'Norton Antivirus Empresarial', 'Lookout', 'VMware Workspace ONE'],
+    'Gestión de Fuerza en Campo': ['Localización Empresarial', 'Cobranza', 'Promotoría y Merchandising', 'Servicios en Campo', 'Control de Sucursales', 'Seguridad', 'Logística'],
+    'Servicios Cloud':            ['Microsoft 365', 'Hosting y Desarrollo Web', 'Claro Drive Negocio', 'Google Workspace'],
+    'Business Intelligence':      ['GEODATA', 'Autenticación Móvil', 'Indicadores Móviles'],
+    'Mobile Marketing':           ['Mensajes RCS', 'Internet Patrocinado', 'Distribución de Aplicaciones', 'Mensajería Masiva', 'Recompensas'],
+    'Comunicación Empresarial':   ['Control de Ventas', 'Formularios Verum', 'SekurMessenger', 'Push to Talk'],
+    'Conectividad Telcel':        ['eSIM', 'Conectividad Avanzada M2M', 'Redes Privadas de Datos', 'Internet Gestionado'],
+    'Gestión Vehicular Telcel':   ['Video a bordo', 'Cadena de Frío', 'Hábitos de Conducción', 'Medición de Combustible', 'Módulo de Ruteo', 'Telemetría'],
+    'Planes Empresariales':       ['Plan Telcel Empresa', 'Plan Telcel Ultra Empresa'],
+}
+
+# Normalización de valores que llegan en el CSV → nombre canónico
+SOL_NORMALIZE = {
+    'seguridad': 'Seguridad',
+    'gestión de fuerza en campo': 'Gestión de Fuerza en Campo',
+    'gestion de fuerza en campo': 'Gestión de Fuerza en Campo',
+    'servicios cloud': 'Servicios Cloud',
+    'business intelligence': 'Business Intelligence',
+    'mobile marketing': 'Mobile Marketing',
+    'comunicación empresarial': 'Comunicación Empresarial',
+    'comunicacion empresarial': 'Comunicación Empresarial',
+    'conectividad telcel': 'Conectividad Telcel',
+    'gestión vehicular telcel': 'Gestión Vehicular Telcel',
+    'gestion vehicular telcel': 'Gestión Vehicular Telcel',
+    'planes empresariales': 'Planes Empresariales',
+    # Códigos SFMC
+    'seg': 'Seguridad',
+    'gfc': 'Gestión de Fuerza en Campo',
+    'sec': 'Servicios Cloud',
+    'bui': 'Business Intelligence',
+    'mom': 'Mobile Marketing',
+    'coe': 'Comunicación Empresarial',
+    'cov': 'Conectividad Telcel',
+    'cot': 'Conectividad Telcel',
+    'gvt': 'Gestión Vehicular Telcel',
+    'pne': 'Planes Empresariales',
+    'pte': 'Planes Empresariales',
+    'teu': 'Planes Empresariales',
+}
 
 app = Flask(__name__)
 
@@ -180,6 +224,115 @@ def gmail_borradores():
         )
         total_ok = sum(1 for r in resultados if r['ok'])
         return jsonify({'ok': True, 'total': len(resultados), 'creados': total_ok, 'detalle': resultados})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/conteo')
+def conteo():
+    return render_template('conteo.html')
+
+
+@app.route('/api/conteo', methods=['POST'])
+def api_conteo():
+    try:
+        data = request.json
+        fecha_inicio = datetime.strptime(data['fecha_inicio'], '%Y-%m-%d').date()
+        fecha_fin    = datetime.strptime(data['fecha_fin'],    '%Y-%m-%d').date()
+
+        config_path = os.path.join(script_dir, 'config.json')
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+
+        carpeta_csv = config['rutas']['carpeta_csv']
+        csvs = sorted(glob.glob(os.path.join(carpeta_csv, 'leads_diarios_*.csv')))
+        if not csvs:
+            return jsonify({'error': 'No se encontró ningún archivo leads_diarios_*.csv'}), 404
+        csv_path = csvs[-1]
+
+        REGIONES  = ['R1','R2','R3','R4','R5','R6','R7','R8','R9','MOM','BUI']
+        FORMATOS  = [
+            '%Y-%m-%d %H:%M:%S', '%m/%d/%Y %I:%M:%S %p', '%m/%d/%Y %H:%M:%S',
+            '%d-%m-%Y %H:%M:%S', '%m/%d/%Y %H:%M',       '%m/%d/%Y %I:%M %p',
+            '%Y-%m-%d %H:%M',
+        ]
+        counts    = {}
+        # Inicializar desglose con el catálogo completo en 0
+        breakdown = {sol: {srv: 0 for srv in srvs} for sol, srvs in CATALOG.items()}
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    fecha_str = row.get('CreatedAt', '').strip()
+                    fecha = None
+                    for fmt in FORMATOS:
+                        try:
+                            fecha = datetime.strptime(fecha_str, fmt).date()
+                            break
+                        except ValueError:
+                            continue
+                    if not fecha or not (fecha_inicio <= fecha <= fecha_fin):
+                        continue
+
+                    region   = row.get('Region', '').upper().strip()
+                    solucion = row.get('SolucionInteres', '').upper().strip()
+
+                    if 'MOBILE MARKETING' in solucion or solucion == 'MOM':
+                        bucket = 'MOM'
+                    elif 'BUSINESS INTELLIGENCE' in solucion or solucion == 'BUI':
+                        bucket = 'BUI'
+                    elif region in ['R1','R2','R3','R4','R5','R6','R7','R8','R9']:
+                        bucket = region
+                    else:
+                        continue
+
+                    # Conteo por día/región
+                    key = fecha.strftime('%d/%m/%Y')
+                    if key not in counts:
+                        counts[key] = {r: 0 for r in REGIONES}
+                    counts[key][bucket] += 1
+
+                    # Desglose: normalizar solución al nombre canónico
+                    sol_raw = row.get('SolucionInteres', '').strip()
+                    srv_raw = row.get('ServicioInteres', '').strip() or '(Sin especificar)'
+                    sol_key = SOL_NORMALIZE.get(sol_raw.lower(), sol_raw) or '(Sin especificar)'
+
+                    if sol_key not in breakdown:
+                        breakdown[sol_key] = {}
+                    if srv_raw not in breakdown[sol_key]:
+                        breakdown[sol_key][srv_raw] = 0
+                    breakdown[sol_key][srv_raw] += 1
+
+                except Exception:
+                    continue
+
+        all_dates = sorted(counts.keys(), key=lambda d: datetime.strptime(d, '%d/%m/%Y'))
+        rows = [{'dia': d, **counts[d]} for d in all_dates]
+
+        # Serializar en orden del catálogo; extras al final
+        catalog_order = list(CATALOG.keys())
+        extras = [s for s in breakdown if s not in catalog_order]
+        desglose = []
+        for sol in catalog_order + extras:
+            if sol not in breakdown:
+                continue
+            servicios_dict = breakdown[sol]
+            sol_total = sum(servicios_dict.values())
+            # Servicios del catálogo primero (en orden), luego extras
+            cat_srvs = CATALOG.get(sol, [])
+            extra_srvs = [s for s in servicios_dict if s not in cat_srvs]
+            ordered_srvs = cat_srvs + extra_srvs
+            desglose.append({
+                'solucion': sol,
+                'total': sol_total,
+                'servicios': [
+                    {'servicio': srv, 'total': servicios_dict.get(srv, 0)}
+                    for srv in ordered_srvs
+                ]
+            })
+
+        return jsonify({'rows': rows, 'desglose': desglose, 'csv': os.path.basename(csv_path)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

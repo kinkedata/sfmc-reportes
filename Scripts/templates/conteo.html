@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conteo de Leads – Telcel Empresas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #1a2332;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: #00529B;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,82,155,0.3);
+    }
+    .header-logo {
+      width: 36px; height: 36px;
+      background: white; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 14px; color: #00529B; letter-spacing: -0.5px;
+    }
+    .header h1 { color: white; font-size: 18px; font-weight: 600; }
+    .header-sub { color: rgba(255,255,255,0.65); font-size: 13px; margin-left: auto; }
+
+    /* Nav */
+    .nav {
+      background: #003f7a;
+      padding: 0 32px;
+      display: flex;
+      gap: 4px;
+    }
+    .nav-link {
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .nav-link:hover { color: white; }
+    .nav-link.active { color: white; border-bottom-color: #60a5fa; }
+
+    /* Layout */
+    .container {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e8edf3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header h2 { font-size: 15px; font-weight: 600; color: #1a2332; }
+    .card-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #e8f0fa;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .card-body { padding: 24px; }
+
+    /* Date section */
+    .date-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .date-field { display: flex; flex-direction: column; gap: 6px; }
+    .date-field label {
+      font-size: 12px; font-weight: 600; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .date-field input[type="date"] {
+      padding: 9px 12px;
+      border: 1.5px solid #d1dae6; border-radius: 8px;
+      font-size: 14px; color: #1a2332; background: white;
+      cursor: pointer; outline: none; transition: border-color 0.15s;
+      min-width: 160px;
+    }
+    .date-field input[type="date"]:focus {
+      border-color: #00529B;
+      box-shadow: 0 0 0 3px rgba(0,82,155,0.1);
+    }
+    .date-separator { font-size: 20px; color: #94a3b8; margin-top: 22px; }
+
+    /* Presets */
+    .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .preset-btn {
+      padding: 7px 14px;
+      border: 1.5px solid #d1dae6; border-radius: 20px;
+      background: white; font-size: 13px; font-weight: 500;
+      color: #475569; cursor: pointer; transition: all 0.15s;
+    }
+    .preset-btn:hover { border-color: #00529B; color: #00529B; background: #f0f6ff; }
+    .preset-btn.active { border-color: #00529B; background: #00529B; color: white; }
+
+    /* Action bar */
+    .action-bar {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 28px;
+      background: #00529B; color: white;
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,82,155,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #003f7a;
+      box-shadow: 0 4px 16px rgba(0,82,155,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      background: white; color: #1a2332;
+      border: 1.5px solid #d1dae6; border-radius: 8px;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-secondary:hover:not(:disabled) { border-color: #00529B; color: #00529B; background: #f0f6ff; }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .period-display { font-size: 13px; color: #64748b; }
+    .period-display strong { color: #1a2332; }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #e8edf3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 700px;
+    }
+    thead tr {
+      background: #00529B;
+      color: white;
+    }
+    thead th {
+      padding: 11px 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td {
+      padding: 10px 16px;
+      text-align: center;
+      color: #334155;
+    }
+    tbody td:first-child { text-align: left; font-weight: 500; color: #1a2332; font-size: 13px; }
+    .cell-zero { color: #94a3b8; }
+    .cell-pos  { color: #1a2332; font-weight: 600; }
+
+    /* Totals row */
+    tfoot tr { background: #f8fafc; border-top: 2px solid #e2e8f0; }
+    tfoot td {
+      padding: 10px 16px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: #1a2332;
+    }
+    tfoot td:first-child { text-align: left; }
+
+    /* Empty state */
+    .table-empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .table-empty .icon { font-size: 36px; display: block; margin-bottom: 12px; }
+
+    /* Meta info */
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-left: auto;
+    }
+    .meta-text { font-size: 12px; color: #94a3b8; }
+
+    /* Copy feedback */
+    .copy-feedback {
+      font-size: 12px;
+      color: #166534;
+      background: #dcfce7;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .copy-feedback.show { opacity: 1; }
+
+    .hidden { display: none !important; }
+
+    /* Breakdown table */
+    .breakdown-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .breakdown-table thead tr { background: #00529B; color: white; }
+    .breakdown-table thead th {
+      padding: 11px 16px; font-weight: 600; font-size: 12px;
+      letter-spacing: 0.3px; text-align: left;
+    }
+    .breakdown-table thead th.col-num { text-align: right; min-width: 110px; }
+    .breakdown-table tbody tr { border-bottom: 1px solid #f1f5f9; }
+    .breakdown-table tbody tr:last-child { border-bottom: none; }
+
+    /* Celda de solución (rowspan) */
+    .cell-solucion {
+      padding: 0 16px;
+      font-weight: 700; color: #1a2332;
+      border-right: 2px solid #e2e8f0;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    /* Celda de servicio */
+    .cell-servicio { padding: 9px 16px; color: #1a2332; font-weight: 600; text-align: left; }
+    .cell-servicio.zero { color: #94a3b8; font-weight: 400; }
+    /* Celda total por servicio */
+    .cell-srv-total {
+      padding: 9px 16px; text-align: right;
+      font-weight: 600; color: #1a2332;
+    }
+    .cell-srv-total.zero { color: #94a3b8; font-weight: 400; }
+    /* Celda total de solución (rowspan) */
+    .cell-sol-total {
+      padding: 0 20px; text-align: right;
+      font-size: 20px; font-weight: 700; color: #00529B;
+      vertical-align: middle;
+      border-left: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .cell-sol-total.zero { font-size: 14px; color: #94a3b8; font-weight: 400; }
+    /* Separador entre grupos */
+    .breakdown-table tbody tr.group-first td { border-top: 2px solid #e2e8f0; }
+    /* Fila total global */
+    .row-total-global td {
+      padding: 11px 16px; background: #f8fafc;
+      font-weight: 700; color: #1a2332;
+      border-top: 2px solid #cbd5e1;
+    }
+    .row-total-global td:last-child { text-align: right; font-size: 18px; color: #00529B; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-logo">T</div>
+    <h1>Reportes Telcel Empresas</h1>
+    <span class="header-sub">Conteo de leads por día y región</span>
+  </header>
+  <nav class="nav">
+    <a href="/" class="nav-link">📊 Generador</a>
+    <a href="/conteo" class="nav-link active">📈 Conteo de Leads</a>
+  </nav>
+
+  <div class="container">
+
+    <!-- Filtros -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <h2>Período de consulta</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="date-row">
+          <div class="date-field">
+            <label>Fecha inicio</label>
+            <input type="date" id="fecha-inicio">
+          </div>
+          <span class="date-separator">→</span>
+          <div class="date-field">
+            <label>Fecha fin</label>
+            <input type="date" id="fecha-fin">
+          </div>
+        </div>
+
+        <div class="presets">
+          <button class="preset-btn" onclick="setPreset(this,'hoy')">Hoy</button>
+          <button class="preset-btn active" onclick="setPreset(this,'ayer')">Ayer</button>
+          <button class="preset-btn" onclick="setPreset(this,'lunes')">Lunes (V–D)</button>
+          <button class="preset-btn" onclick="setPreset(this,'ultimos3')">Últimos 3 días</button>
+          <button class="preset-btn" onclick="setPreset(this,'semana')">Esta semana</button>
+          <button class="preset-btn" onclick="setPreset(this,'mes')">Este mes</button>
+          <button class="preset-btn" onclick="setPreset(this,'mes_anterior')">Mes anterior</button>
+          <button class="preset-btn" onclick="setPreset(this,'año')">Este año</button>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="btn-consultar" onclick="consultar()">
+            <span>🔍</span>
+            <span id="btn-text">Consultar</span>
+          </button>
+          <span class="period-display" id="period-display"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📈</div>
+        <h2>Leads por día y región</h2>
+        <div class="meta-bar">
+          <span class="copy-feedback" id="copy-feedback">¡Copiado!</span>
+          <span class="meta-text" id="meta-csv"></span>
+          <button class="btn-secondary" id="btn-copiar" onclick="copiarTabla()" disabled>
+            <span>📋</span> Copiar tabla
+          </button>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div id="table-container">
+          <div class="table-empty">
+            <span class="icon">📊</span>
+            Selecciona un período y presiona <strong>Consultar</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desglose Solución → Servicio -->
+    <div class="card" id="card-desglose" style="display:none;">
+      <div class="card-header">
+        <div class="card-icon">🔎</div>
+        <h2>Desglose por Solución → Servicio</h2>
+        <div class="meta-bar">
+          <span class="copy-feedback" id="copy-feedback-2">¡Copiado!</span>
+          <button class="btn-secondary" id="btn-copiar-2" onclick="copiarDesglose()">
+            <span>📋</span> Copiar tabla
+          </button>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper">
+          <table class="breakdown-table" id="desglose-table">
+            <thead>
+              <tr>
+                <th style="min-width:200px;">Solución de Interés</th>
+                <th>Servicio de Interés</th>
+                <th class="col-num">Total Por Servicio</th>
+                <th class="col-num">Total de la Solución</th>
+              </tr>
+            </thead>
+            <tbody id="desglose-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const COLS = ['R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BUI'];
+    // Map from API keys to display headers
+    const COL_KEYS = {'MM':'MOM','BUI':'BUI','R1':'R1','R2':'R2','R3':'R3','R4':'R4','R5':'R5','R6':'R6','R7':'R7','R8':'R8','R9':'R9'};
+    const API_COLS = ['R1','R2','R3','R4','R5','R6','R7','R8','R9','MOM','BUI'];
+
+    // ── Presets ─────────────────────────────────────────────
+    function toISO(d) { return d.toISOString().split('T')[0]; }
+
+    function setDates(start, end) {
+      document.getElementById('fecha-inicio').value = toISO(start);
+      document.getElementById('fecha-fin').value    = toISO(end);
+      updatePeriodDisplay();
+    }
+
+    function setPreset(btn, preset) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const day = today.getDay();
+
+      if (preset === 'hoy') {
+        setDates(today, today);
+      } else if (preset === 'ayer') {
+        const d = new Date(today); d.setDate(today.getDate()-1);
+        setDates(d, d);
+      } else if (preset === 'lunes') {
+        const v = new Date(today); v.setDate(today.getDate() - ((day+2)%7) - 1);
+        const dom = new Date(v); dom.setDate(v.getDate()+2);
+        setDates(v, dom);
+      } else if (preset === 'ultimos3') {
+        const s = new Date(today); s.setDate(today.getDate()-3);
+        const e = new Date(today); e.setDate(today.getDate()-1);
+        setDates(s, e);
+      } else if (preset === 'semana') {
+        const lun = new Date(today); lun.setDate(today.getDate() - (day===0?6:day-1));
+        const ayer = new Date(today); ayer.setDate(today.getDate()-1);
+        setDates(lun, ayer);
+      } else if (preset === 'mes') {
+        const ini = new Date(today.getFullYear(), today.getMonth(), 1);
+        const fin = new Date(today); fin.setDate(today.getDate()-1);
+        setDates(ini, fin.getTime() >= ini.getTime() ? fin : ini);
+      } else if (preset === 'mes_anterior') {
+        const ini = new Date(today.getFullYear(), today.getMonth()-1, 1);
+        const fin = new Date(today.getFullYear(), today.getMonth(), 0);
+        setDates(ini, fin);
+      } else if (preset === 'año') {
+        const ini = new Date(today.getFullYear(), 0, 1);
+        const fin = new Date(today); fin.setDate(today.getDate()-1);
+        setDates(ini, fin.getTime() >= ini.getTime() ? fin : ini);
+      }
+    }
+
+    function updatePeriodDisplay() {
+      const inicio = document.getElementById('fecha-inicio').value;
+      const fin    = document.getElementById('fecha-fin').value;
+      const el = document.getElementById('period-display');
+      if (!inicio || !fin) { el.textContent = ''; return; }
+      const d1 = new Date(inicio+'T00:00:00');
+      const d2 = new Date(fin+'T00:00:00');
+      const diff = Math.round((d2-d1)/86400000)+1;
+      const fmt = d => d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      if (inicio === fin) {
+        el.innerHTML = `<strong>${fmt(d1)}</strong> · 1 día`;
+      } else {
+        el.innerHTML = `<strong>${fmt(d1)}</strong> al <strong>${fmt(d2)}</strong> · ${diff} días`;
+      }
+    }
+
+    document.getElementById('fecha-inicio').addEventListener('change', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      updatePeriodDisplay();
+    });
+    document.getElementById('fecha-fin').addEventListener('change', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      updatePeriodDisplay();
+    });
+
+    // Init: ayer por defecto
+    setPreset(document.querySelector('.preset-btn.active'), 'ayer');
+
+    // ── Consulta ────────────────────────────────────────────
+    let tableData = [];
+    let desgloseData = [];
+
+    async function consultar() {
+      const inicio = document.getElementById('fecha-inicio').value;
+      const fin    = document.getElementById('fecha-fin').value;
+      if (!inicio || !fin) { alert('Selecciona las fechas de inicio y fin.'); return; }
+
+      const btn = document.getElementById('btn-consultar');
+      const btnText = document.getElementById('btn-text');
+      btn.disabled = true;
+      btnText.textContent = 'Consultando…';
+
+      try {
+        const res = await fetch('/api/conteo', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({fecha_inicio: inicio, fecha_fin: fin})
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          alert('Error: ' + data.error);
+          return;
+        }
+
+        tableData = data.rows;
+        desgloseData = data.desglose || [];
+        document.getElementById('meta-csv').textContent = 'Fuente: ' + data.csv;
+        renderTable(data.rows);
+        renderDesglose(data.desglose || []);
+        document.getElementById('btn-copiar').disabled = data.rows.length === 0;
+
+      } catch(e) {
+        alert('Error de conexión: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Consultar';
+      }
+    }
+
+    // ── Render tabla ────────────────────────────────────────
+    function renderTable(rows) {
+      const container = document.getElementById('table-container');
+
+      if (rows.length === 0) {
+        container.innerHTML = `
+          <div class="table-empty">
+            <span class="icon">🔍</span>
+            No hay leads para el período seleccionado.
+          </div>`;
+        return;
+      }
+
+      // Calcular totales
+      const totals = {};
+      API_COLS.forEach(c => totals[c] = 0);
+      rows.forEach(row => API_COLS.forEach(c => totals[c] += (row[c] || 0)));
+      const totalGeneral = API_COLS.reduce((s,c) => s + totals[c], 0);
+
+      // Encabezados (MM visible para MOM)
+      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI'];
+
+      let html = `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                ${headers.map(h => `<th>${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      rows.forEach(row => {
+        const rowTotal = API_COLS.reduce((s,c) => s+(row[c]||0), 0);
+        html += '<tr>';
+        html += `<td>${row.dia}</td>`;
+        API_COLS.forEach(c => {
+          const v = row[c] || 0;
+          html += `<td class="${v===0?'cell-zero':'cell-pos'}">${v}</td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += `
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>TOTAL</td>
+                ${API_COLS.map(c => `<td>${totals[c]}</td>`).join('')}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // ── Render desglose Solución → Servicio ─────────────────
+    function renderDesglose(desglose) {
+      const card = document.getElementById('card-desglose');
+      const tbody = document.getElementById('desglose-body');
+      tbody.innerHTML = '';
+
+      if (!desglose || desglose.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+
+      let totalGlobal = 0;
+      desglose.forEach((grupo, gi) => {
+        totalGlobal += grupo.total;
+        const n = grupo.servicios.length;
+        const solZero = grupo.total === 0;
+
+        grupo.servicios.forEach((s, i) => {
+          const tr = document.createElement('tr');
+          if (i === 0) tr.classList.add('group-first');
+          const srvZero = s.total === 0;
+
+          let html = '';
+
+          // Primera fila del grupo: celda solución con rowspan
+          if (i === 0) {
+            html += `<td class="cell-solucion" rowspan="${n}">${grupo.solucion}</td>`;
+          }
+
+          html += `<td class="cell-servicio${srvZero ? ' zero' : ''}">${s.servicio}</td>`;
+          html += `<td class="cell-srv-total${srvZero ? ' zero' : ''}">${s.total}</td>`;
+
+          // Primera fila del grupo: celda total solución con rowspan
+          if (i === 0) {
+            html += `<td class="cell-sol-total${solZero ? ' zero' : ''}" rowspan="${n}">${grupo.total}</td>`;
+          }
+
+          tr.innerHTML = html;
+          tbody.appendChild(tr);
+        });
+      });
+
+      // Fila total global
+      const trTotal = document.createElement('tr');
+      trTotal.className = 'row-total-global';
+      trTotal.innerHTML = `<td colspan="3">TOTAL</td><td>${totalGlobal}</td>`;
+      tbody.appendChild(trTotal);
+
+      card.style.display = '';
+    }
+
+    // ── Copiar desglose para Google Sheets ──────────────────
+    function copiarDesglose() {
+      if (!desgloseData || desgloseData.length === 0) return;
+      const lines = ['Solución de Interés\tServicio de Interés\tTotal Por Servicio\tTotal de la Solución'];
+      let totalGlobal = 0;
+      desgloseData.forEach(grupo => {
+        totalGlobal += grupo.total;
+        grupo.servicios.forEach((s, i) => {
+          const solCol  = i === 0 ? grupo.solucion : '';
+          const totCol  = i === 0 ? grupo.total : '';
+          lines.push(`${solCol}\t${s.servicio}\t${s.total}\t${totCol}`);
+        });
+      });
+      lines.push(`TOTAL\t\t\t${totalGlobal}`);
+
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        const fb = document.getElementById('copy-feedback-2');
+        fb.classList.add('show');
+        setTimeout(() => fb.classList.remove('show'), 2000);
+      }).catch(() => alert('No se pudo copiar al portapapeles.'));
+    }
+
+    // ── Copiar para Google Sheets ────────────────────────────
+    function copiarTabla() {
+      if (tableData.length === 0) return;
+
+      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI'];
+      const lines = [headers.join('\t')];
+
+      tableData.forEach(row => {
+        const cells = [row.dia, ...API_COLS.map(c => row[c] || 0)];
+        lines.push(cells.join('\t'));
+      });
+
+      // Fila de totales
+      const totals = {};
+      API_COLS.forEach(c => totals[c] = 0);
+      tableData.forEach(row => API_COLS.forEach(c => totals[c] += (row[c]||0)));
+      lines.push(['TOTAL', ...API_COLS.map(c => totals[c])].join('\t'));
+
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        const fb = document.getElementById('copy-feedback');
+        fb.classList.add('show');
+        setTimeout(() => fb.classList.remove('show'), 2000);
+      }).catch(() => alert('No se pudo copiar al portapapeles.'));
+    }
+  </script>
+
+</body>
+</html>
