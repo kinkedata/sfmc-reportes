@@ -245,10 +245,10 @@ def api_conteo():
             config = json.load(f)
 
         carpeta_csv = config['rutas']['carpeta_csv']
-        csvs = sorted(glob.glob(os.path.join(carpeta_csv, 'leads_diarios_*.csv')))
-        if not csvs:
-            return jsonify({'error': 'No se encontró ningún archivo leads_diarios_*.csv'}), 404
-        csv_path = csvs[-1]
+        fecha_hoy = datetime.now().strftime('%d%m%Y')
+        csv_path = os.path.join(carpeta_csv, f'leads_diarios_{fecha_hoy}.csv')
+        if not os.path.exists(csv_path):
+            return jsonify({'error': f'No se encontró el archivo leads_diarios_{fecha_hoy}.csv'}), 404
 
         REGIONES  = ['R1','R2','R3','R4','R5','R6','R7','R8','R9','MOM','BUI']
         FORMATOS  = [

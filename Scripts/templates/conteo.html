@@ -256,11 +256,11 @@
       white-space: nowrap;
     }
     /* Celda de servicio */
-    .cell-servicio { padding: 9px 16px; color: #1a2332; font-weight: 600; text-align: left; }
+    .cell-servicio { padding: 2px 16px; color: #1a2332; font-weight: 600; text-align: left; }
     .cell-servicio.zero { color: #94a3b8; font-weight: 400; }
     /* Celda total por servicio */
     .cell-srv-total {
-      padding: 9px 16px; text-align: right;
+      padding: 2px 16px; text-align: right;
       font-weight: 600; color: #1a2332;
     }
     .cell-srv-total.zero { color: #94a3b8; font-weight: 400; }
@@ -538,7 +538,7 @@
       const totalGeneral = API_COLS.reduce((s,c) => s + totals[c], 0);
 
       // Encabezados (MM visible para MOM)
-      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI'];
+      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI','Total'];
 
       let html = `
         <div class="table-wrapper">
@@ -559,6 +559,7 @@
           const v = row[c] || 0;
           html += `<td class="${v===0?'cell-zero':'cell-pos'}">${v}</td>`;
         });
+        html += `<td class="cell-pos" style="font-weight:700;">${rowTotal}</td>`;
         html += '</tr>';
       });
 
@@ -568,6 +569,7 @@
               <tr>
                 <td>TOTAL</td>
                 ${API_COLS.map(c => `<td>${totals[c]}</td>`).join('')}
+                <td style="font-weight:700;">${totalGeneral}</td>
               </tr>
             </tfoot>
           </table>
@@ -654,11 +656,12 @@
     function copiarTabla() {
       if (tableData.length === 0) return;
 
-      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI'];
+      const headers = ['Día','R1','R2','R3','R4','R5','R6','R7','R8','R9','MM','BI','Total'];
       const lines = [headers.join('\t')];
 
       tableData.forEach(row => {
-        const cells = [row.dia, ...API_COLS.map(c => row[c] || 0)];
+        const rowTotal = API_COLS.reduce((s,c) => s+(row[c]||0), 0);
+        const cells = [row.dia, ...API_COLS.map(c => row[c] || 0), rowTotal];
         lines.push(cells.join('\t'));
       });
 
@@ -666,7 +669,8 @@
       const totals = {};
       API_COLS.forEach(c => totals[c] = 0);
       tableData.forEach(row => API_COLS.forEach(c => totals[c] += (row[c]||0)));
-      lines.push(['TOTAL', ...API_COLS.map(c => totals[c])].join('\t'));
+      const totalGeneral = API_COLS.reduce((s,c) => s+totals[c], 0);
+      lines.push(['TOTAL', ...API_COLS.map(c => totals[c]), totalGeneral].join('\t'));
 
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
         const fb = document.getElementById('copy-feedback');
