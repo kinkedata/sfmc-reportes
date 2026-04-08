@@ -260,6 +260,16 @@ def api_conteo():
         # Inicializar desglose con el catálogo completo en 0
         breakdown = {sol: {srv: 0 for srv in srvs} for sol, srvs in CATALOG.items()}
 
+        # Matriz región × solución (región geográfica real)
+        REGIONES_GEO = ['R1','R2','R3','R4','R5','R6','R7','R8','R9']
+        REGIONES_NOMBRES = {
+            'R1': 'Región 1', 'R2': 'Región 2', 'R3': 'Región 3',
+            'R4': 'Región 4', 'R5': 'Región 5', 'R6': 'Región 6',
+            'R7': 'Región 7', 'R8': 'Región 8', 'R9': 'Región 9',
+        }
+        SOLUCIONES_CATALOG = list(CATALOG.keys())
+        matriz = {r: {sol: 0 for sol in SOLUCIONES_CATALOG} for r in REGIONES_GEO}
+
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -274,6 +284,13 @@ def api_conteo():
                             continue
                     if not fecha or not (fecha_inicio <= fecha <= fecha_fin):
                         continue
+
+                    # Matriz: usar región geográfica real del CSV para todas las soluciones
+                    region_geo = row.get('Region', '').upper().strip()
+                    sol_raw_m  = row.get('SolucionInteres', '').strip()
+                    sol_key_m  = SOL_NORMALIZE.get(sol_raw_m.lower(), sol_raw_m)
+                    if region_geo in REGIONES_GEO and sol_key_m in SOLUCIONES_CATALOG:
+                        matriz[region_geo][sol_key_m] += 1
 
                     region   = row.get('Region', '').upper().strip()
                     solucion = row.get('SolucionInteres', '').upper().strip()
@@ -332,7 +349,21 @@ def api_conteo():
                 ]
             })
 
-        return jsonify({'rows': rows, 'desglose': desglose, 'csv': os.path.basename(csv_path)})
+        matriz_data = [
+            {
+                'region': r,
+                'nombre': REGIONES_NOMBRES[r],
+                'soluciones': {sol: matriz[r][sol] for sol in SOLUCIONES_CATALOG},
+            }
+            for r in REGIONES_GEO
+        ]
+        return jsonify({
+            'rows': rows,
+            'desglose': desglose,
+            'csv': os.path.basename(csv_path),
+            'matriz': matriz_data,
+            'soluciones': SOLUCIONES_CATALOG,
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

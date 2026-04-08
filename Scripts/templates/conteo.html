@@ -282,6 +282,29 @@
       border-top: 2px solid #cbd5e1;
     }
     .row-total-global td:last-child { text-align: right; font-size: 18px; color: #00529B; }
+
+    /* Matriz Región × Solución */
+    .matriz-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+    .matriz-table thead tr { background: #00529B; color: white; }
+    .matriz-table thead th {
+      padding: 10px 10px; font-weight: 600; font-size: 11px;
+      text-align: center; letter-spacing: 0.3px; line-height: 1.3;
+    }
+    .matriz-table thead th:first-child { text-align: left; min-width: 100px; }
+    .matriz-table thead th:last-child { white-space: nowrap; }
+    .matriz-table tbody tr { border-bottom: 1px solid #e8edf3; }
+    .matriz-table tbody tr:nth-child(even) { background: #f0f4f8; }
+    .matriz-table tbody tr:hover { background: #e4edf8; }
+    .matriz-table tbody td { padding: 9px 10px; text-align: center; color: #334155; }
+    .matriz-table .cell-region { text-align: left; font-weight: 600; color: #1a2332; white-space: nowrap; }
+    .matriz-table .cell-row-total { font-weight: 700; color: #00529B; font-size: 13px; }
+    .matriz-table tfoot tr { background: #1a3a5c; }
+    .matriz-table tfoot td {
+      padding: 10px 10px; text-align: center; font-weight: 700;
+      font-size: 12px; color: white; border-top: 2px solid #0d2540;
+    }
+    .matriz-table tfoot td:first-child { text-align: left; }
+    .matriz-table tfoot td:last-child { font-size: 15px; color: #60d8a0; }
   </style>
 </head>
 <body>
@@ -392,6 +415,23 @@
       </div>
     </div>
 
+    <!-- Matriz Región × Solución -->
+    <div class="card" id="card-matriz" style="display:none;">
+      <div class="card-header">
+        <div class="card-icon">🗂️</div>
+        <h2>Leads por Región y Solución</h2>
+        <div class="meta-bar">
+          <span class="copy-feedback" id="copy-feedback-3">¡Copiado!</span>
+          <button class="btn-secondary" id="btn-copiar-3" onclick="copiarMatriz()">
+            <span>📋</span> Copiar tabla
+          </button>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" id="matriz-wrapper"></div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -479,6 +519,8 @@
     // ── Consulta ────────────────────────────────────────────
     let tableData = [];
     let desgloseData = [];
+    let matrizData = [];
+    let solucionesData = [];
 
     async function consultar() {
       const inicio = document.getElementById('fecha-inicio').value;
@@ -505,9 +547,12 @@
 
         tableData = data.rows;
         desgloseData = data.desglose || [];
+        matrizData = data.matriz || [];
+        solucionesData = data.soluciones || [];
         document.getElementById('meta-csv').textContent = 'Fuente: ' + data.csv;
         renderTable(data.rows);
         renderDesglose(data.desglose || []);
+        renderMatriz(data.matriz || [], data.soluciones || []);
         document.getElementById('btn-copiar').disabled = data.rows.length === 0;
 
       } catch(e) {
@@ -647,6 +692,87 @@
 
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
         const fb = document.getElementById('copy-feedback-2');
+        fb.classList.add('show');
+        setTimeout(() => fb.classList.remove('show'), 2000);
+      }).catch(() => alert('No se pudo copiar al portapapeles.'));
+    }
+
+    // ── Render Matriz Región × Solución ─────────────────────
+    function renderMatriz(matriz, soluciones) {
+      const card    = document.getElementById('card-matriz');
+      const wrapper = document.getElementById('matriz-wrapper');
+
+      if (!matriz || matriz.length === 0 || !soluciones || soluciones.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+
+      // Totales por columna
+      const colTotals = {};
+      soluciones.forEach(s => colTotals[s] = 0);
+      matriz.forEach(r => soluciones.forEach(s => { colTotals[s] += (r.soluciones[s] || 0); }));
+      const grandTotal = soluciones.reduce((sum, s) => sum + colTotals[s], 0);
+
+      let html = `
+        <table class="matriz-table">
+          <thead>
+            <tr>
+              <th>Región</th>
+              ${soluciones.map(s => `<th>${s}</th>`).join('')}
+              <th>Totales por región</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      matriz.forEach(r => {
+        const rowTotal = soluciones.reduce((sum, s) => sum + (r.soluciones[s] || 0), 0);
+        html += '<tr>';
+        html += `<td class="cell-region">${r.nombre}</td>`;
+        soluciones.forEach(s => {
+          const v = r.soluciones[s] || 0;
+          html += `<td class="${v === 0 ? 'cell-zero' : 'cell-pos'}">${v}</td>`;
+        });
+        html += `<td class="cell-row-total">${rowTotal}</td>`;
+        html += '</tr>';
+      });
+
+      html += `
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Totales</td>
+              ${soluciones.map(s => `<td>${colTotals[s]}</td>`).join('')}
+              <td>${grandTotal}</td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
+
+      wrapper.innerHTML = html;
+      card.style.display = '';
+    }
+
+    // ── Copiar Matriz para Google Sheets ─────────────────────
+    function copiarMatriz() {
+      if (!matrizData || matrizData.length === 0) return;
+      const headers = ['Región', ...solucionesData, 'Totales por región'];
+      const lines = [headers.join('\t')];
+
+      const colTotals = {};
+      solucionesData.forEach(s => colTotals[s] = 0);
+
+      matrizData.forEach(r => {
+        const rowTotal = solucionesData.reduce((sum, s) => sum + (r.soluciones[s] || 0), 0);
+        solucionesData.forEach(s => { colTotals[s] += (r.soluciones[s] || 0); });
+        lines.push([r.nombre, ...solucionesData.map(s => r.soluciones[s] || 0), rowTotal].join('\t'));
+      });
+
+      const grandTotal = solucionesData.reduce((sum, s) => sum + colTotals[s], 0);
+      lines.push(['Totales', ...solucionesData.map(s => colTotals[s]), grandTotal].join('\t'));
+
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        const fb = document.getElementById('copy-feedback-3');
         fb.classList.add('show');
         setTimeout(() => fb.classList.remove('show'), 2000);
       }).catch(() => alert('No se pudo copiar al portapapeles.'));
